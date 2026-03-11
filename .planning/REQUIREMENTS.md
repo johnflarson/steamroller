@@ -79,13 +79,33 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| LOOP-01 | Phase 1 | Pending |
+| LOOP-02 | Phase 1 | Pending |
+| LOOP-03 | Phase 1 | Pending |
+| LOOP-04 | Phase 1 | Pending |
+| LOOP-05 | Phase 1 | Pending |
+| LOOP-06 | Phase 1 | Pending |
+| SCOR-01 | Phase 1 | Pending |
+| SCOR-02 | Phase 1 | Pending |
+| WIN-01 | Phase 1 | Pending |
+| SCOR-03 | Phase 2 | Pending |
+| WIN-02 | Phase 2 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Pending |
+| UI-04 | Phase 2 | Pending |
+| UI-05 | Phase 2 | Pending |
+| SETUP-01 | Phase 3 | Pending |
+| SETUP-02 | Phase 3 | Pending |
+| WIN-03 | Phase 3 | Pending |
+| EXPORT-01 | Phase 4 | Pending |
+| EXPORT-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 ⚠️
+- Mapped to phases: 18
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-11 after initial definition*
+*Last updated: 2026-03-11 after roadmap creation*
