@@ -20,21 +20,21 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **SCOR-01**: +1 point when placement creates 3+ owned cells in a row (horizontal, vertical, diagonal)
 - [x] **SCOR-02**: Max 1 point per turn regardless of lines formed
-- [ ] **SCOR-03**: Line flash animation briefly highlights the scoring cells
+- [x] **SCOR-03**: Line flash animation briefly highlights the scoring cells
 
 ### Win Condition
 
 - [x] **WIN-01**: Game ends when a player reaches 5 points
-- [ ] **WIN-02**: Win announcement screen with final scores
+- [x] **WIN-02**: Win announcement screen with final scores
 - [ ] **WIN-03**: Play Again returns to player count/name selection
 
 ### UI
 
-- [ ] **UI-01**: Current player clearly indicated (name + color)
-- [ ] **UI-02**: Roll result prominently displayed
-- [ ] **UI-03**: All player scores visible at all times
-- [ ] **UI-04**: Scrollable game log showing rolls, claims, scores, and auto-rerolls
-- [ ] **UI-05**: Responsive layout that works in browser and desktop windows
+- [x] **UI-01**: Current player clearly indicated (name + color)
+- [x] **UI-02**: Roll result prominently displayed
+- [x] **UI-03**: All player scores visible at all times
+- [x] **UI-04**: Scrollable game log showing rolls, claims, scores, and auto-rerolls
+- [x] **UI-05**: Responsive layout that works in browser and desktop windows
 
 ### Setup
 
@@ -88,13 +88,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCOR-01 | Phase 1 | Complete |
 | SCOR-02 | Phase 1 | Complete |
 | WIN-01 | Phase 1 | Complete |
-| SCOR-03 | Phase 2 | Pending |
-| WIN-02 | Phase 2 | Pending |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
-| UI-04 | Phase 2 | Pending |
-| UI-05 | Phase 2 | Pending |
+| SCOR-03 | Phase 2 | Complete (02-01) |
+| WIN-02 | Phase 2 | Complete (02-01) |
+| UI-01 | Phase 2 | Complete (02-01) |
+| UI-02 | Phase 2 | Complete (02-01) |
+| UI-03 | Phase 2 | Complete (02-01) |
+| UI-04 | Phase 2 | Complete (02-01) |
+| UI-05 | Phase 2 | Complete (02-01) |
 | SETUP-01 | Phase 3 | Pending |
 | SETUP-02 | Phase 3 | Pending |
 | WIN-03 | Phase 3 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-14 after plan 01-01 execution*
+*Last updated: 2026-03-14 after plan 02-01 execution*

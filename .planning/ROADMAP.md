@@ -48,7 +48,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Dark theme, muted colors, rounded cells, border highlights, HUD sidebar
+- [x] 02-01-PLAN.md — Dark theme, muted colors, rounded cells, border highlights, HUD sidebar (completed 2026-03-14)
 - [ ] 02-02-PLAN.md — Score line flash animation, spent-cell dimming, win/stalemate overlay
 - [ ] 02-03-PLAN.md — HTML5 export configuration and browser verification
 
@@ -79,6 +79,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-14 |
-| 2. Display and Integration | 0/3 | Not started | - |
+| 2. Display and Integration | 1/3 | In progress | - |
 | 3. Setup and Game Flow | 0/? | Not started | - |
 | 4. Distribution | 0/? | Not started | - |
