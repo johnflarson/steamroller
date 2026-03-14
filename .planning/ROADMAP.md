@@ -60,7 +60,10 @@ Plans:
   1. At game start, a player selects 2, 3, or 4 players and enters a name for each before the board appears
   2. The win screen shows the winner's name and all final scores clearly
   3. Clicking "Play Again" returns to the player count/name selection screen with all board state reset, without reloading the page
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 03-01-PLAN.md — Setup screen UI, player count/name entry, game flow wiring, New Game reroute
 
 ### Phase 4: Distribution
 **Goal**: Distributable builds exist for HTML5 and all desktop targets, verified to run correctly on each platform
@@ -80,5 +83,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-14 |
 | 2. Display and Integration | 3/3 | Complete   | 2026-03-14 |
-| 3. Setup and Game Flow | 0/? | Not started | - |
+| 3. Setup and Game Flow | 0/1 | Planning complete | - |
 | 4. Distribution | 0/? | Not started | - |
