@@ -32,8 +32,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Godot project setup, main scene, data model, board generation, dice roll
-- [ ] 01-02-PLAN.md — Cell highlighting, claiming, turn advance, auto-reroll
-- [ ] 01-03-PLAN.md — Line detection scoring, spent-cell mechanic, win condition
+- [x] 01-02-PLAN.md — Cell highlighting, claiming, turn advance, auto-reroll
+- [x] 01-03-PLAN.md — Line detection scoring, spent-cell mechanic, win condition
 
 ### Phase 2: Display and Integration
 **Goal**: Every game event is visible to the player — cell colors, valid move highlights, score display, game log, current player indicator, win announcement — and the game passes a real HTML5 export test
@@ -45,7 +45,12 @@ Plans:
   3. The game log shows each roll, claim, score event, and auto-reroll in scrollable history
   4. When a line scores, the scoring cells briefly flash before the point is awarded
   5. The game loads and plays correctly in a web browser from an HTML5 export
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Dark theme, muted colors, rounded cells, border highlights, HUD sidebar
+- [ ] 02-02-PLAN.md — Score line flash animation, spent-cell dimming, win/stalemate overlay
+- [ ] 02-03-PLAN.md — HTML5 export configuration and browser verification
 
 ### Phase 3: Setup and Game Flow
 **Goal**: The complete player journey works end-to-end — select player count, enter names, play a full game, see the winner announced, and return to setup without reloading the page
@@ -74,6 +79,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-14 |
-| 2. Display and Integration | 0/? | Not started | - |
+| 2. Display and Integration | 0/3 | Not started | - |
 | 3. Setup and Game Flow | 0/? | Not started | - |
 | 4. Distribution | 0/? | Not started | - |
