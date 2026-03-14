@@ -292,6 +292,49 @@ func _disable_all_cells() -> void:
 				cell_buttons[r][c].disabled = true
 
 # ---------------------------------------------------------------------------
+# Auto-reroll helpers
+# ---------------------------------------------------------------------------
+func _has_unclaimed_cells() -> bool:
+	for r in rows:
+		for c in cols:
+			if owner_grid[r][c] == -1:
+				return true
+	return false
+
+func _check_and_handle_no_moves() -> void:
+	if not _has_unclaimed_cells():
+		# Board is completely full — trigger stalemate (avoids infinite reroll)
+		state = GameState.GAME_OVER
+		_resolve_stalemate()
+		return
+	# Unclaimed cells exist but none match the roll — auto-reroll
+	var max_rerolls := 100
+	var reroll_count := 0
+	while reroll_count < max_rerolls:
+		_log("No valid moves for %d — auto-rerolling..." % current_roll)
+		current_roll = randi_range(1, dice_faces)
+		_log("%s rolled a %d" % [players[current_player].name, current_roll])
+		_update_ui()
+		reroll_count += 1
+		# Check if any unclaimed cell matches the new roll
+		var valid_found := false
+		for r in rows:
+			for c in cols:
+				if owner_grid[r][c] == -1 and board_numbers[r][c] == current_roll:
+					valid_found = true
+					break
+			if valid_found:
+				break
+		if valid_found:
+			# Re-highlight with the new roll; returns here (no more recursion)
+			_highlight_valid_cells()
+			return
+	# Safety fallback: should never reach here on a d6 with unclaimed cells
+	_log("Auto-reroll limit exceeded — ending game to prevent hang")
+	state = GameState.GAME_OVER
+	_resolve_stalemate()
+
+# ---------------------------------------------------------------------------
 # Win / stalemate check (Plan 02 calls this after each claim)
 # ---------------------------------------------------------------------------
 func _check_win_or_stalemate() -> bool:
