@@ -76,7 +76,7 @@ var score_labels: Array = []
 @onready var log_scroll: ScrollContainer = $HBoxContainer/Sidebar/SidebarContent/LogScroll
 @onready var win_overlay: Control = $WinOverlay
 @onready var win_title_label: Label = $WinOverlay/Panel/VBox/TitleLabel
-@onready var win_scores_label: Label = $WinOverlay/Panel/VBox/ScoresLabel
+@onready var win_scores_container: VBoxContainer = $WinOverlay/Panel/VBox/ScoresContainer
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -538,6 +538,7 @@ func _resolve_stalemate() -> void:
 # ---------------------------------------------------------------------------
 func _show_win_overlay(winner_idx: int) -> void:
 	win_title_label.text = "%s Wins!" % players[winner_idx].name
+	win_title_label.add_theme_color_override("font_color", PLAYER_COLORS[winner_idx])
 
 	# Tint the panel border with winner's color
 	var panel_style := StyleBoxFlat.new()
@@ -548,38 +549,53 @@ func _show_win_overlay(winner_idx: int) -> void:
 	panel_style.corner_detail = 4
 	$WinOverlay/Panel.add_theme_stylebox_override("panel", panel_style)
 
-	# Build ranked scores text
+	# Clear any existing score labels and build dynamically (one per player)
+	for child in win_scores_container.get_children():
+		child.queue_free()
 	var sorted_players := []
 	for i in player_count:
-		sorted_players.append({"name": players[i].name, "score": players[i].score})
+		sorted_players.append({"name": players[i].name, "score": players[i].score, "color": PLAYER_COLORS[i]})
 	sorted_players.sort_custom(func(a, b): return a.score > b.score)
-	var lines := ""
 	for p in sorted_players:
-		lines += "%s: %d pts\n" % [p.name, p.score]
-	win_scores_label.text = lines.strip_edges()
+		var lbl := Label.new()
+		lbl.text = "%s: %d pts" % [p.name, p.score]
+		lbl.add_theme_color_override("font_color", p.color)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		win_scores_container.add_child(lbl)
 
 	win_overlay.visible = true
 
 func _show_stalemate_overlay(winners: Array, best_score: int) -> void:
 	win_title_label.text = "Game Over!"
 
-	# Neutral styling (no winner color tint)
+	# Border color: winner's color if single winner, neutral white if tied
+	var border_color := Color(1.0, 1.0, 1.0)
+	if winners.size() == 1:
+		for i in player_count:
+			if players[i].name == winners[0]:
+				border_color = PLAYER_COLORS[i]
+				break
+
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.15, 0.15, 0.18)
 	panel_style.set_border_width_all(4)
-	panel_style.border_color = Color(0.5, 0.5, 0.5)
+	panel_style.border_color = border_color
 	panel_style.set_corner_radius_all(10)
 	panel_style.corner_detail = 4
 	$WinOverlay/Panel.add_theme_stylebox_override("panel", panel_style)
 
-	# Build final scores with winner(s) shown first
+	# Clear and rebuild score labels ranked by score
+	for child in win_scores_container.get_children():
+		child.queue_free()
 	var sorted_players := []
 	for i in player_count:
-		sorted_players.append({"name": players[i].name, "score": players[i].score})
+		sorted_players.append({"name": players[i].name, "score": players[i].score, "color": PLAYER_COLORS[i]})
 	sorted_players.sort_custom(func(a, b): return a.score > b.score)
-	var lines := "Winner(s): %s\n\n" % ", ".join(winners)
 	for p in sorted_players:
-		lines += "%s: %d pts\n" % [p.name, p.score]
-	win_scores_label.text = lines.strip_edges()
+		var lbl := Label.new()
+		lbl.text = "%s: %d pts" % [p.name, p.score]
+		lbl.add_theme_color_override("font_color", p.color)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		win_scores_container.add_child(lbl)
 
 	win_overlay.visible = true
