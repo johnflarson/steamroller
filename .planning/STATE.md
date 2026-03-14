@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-14T20:26:53.845Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-14T23:52:17.395Z"
 last_activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, HUD sidebar, win overlay, score animation
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
   percent: 15
 ---
 
@@ -55,6 +55,7 @@ Progress: [███░░░░░░░] 15%
 | Phase 02-display P01 | 3 | 2 tasks | 2 files |
 | Phase 02-display-and-integration P02 | 4 | 2 tasks | 2 files |
 | Phase 02-display-and-integration P03 | 45 | 2 tasks | 7 files |
+| Phase 03-setup-and-game-flow P01 | 20 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 02-display-and-integration]: Explicit GDScript type annotations required for web export — var x: Type = array[i], not := inference [02-03]
 - [Phase 02-display-and-integration]: Score strip relocated below board with player-colored PanelContainer borders [02-03]
 - [Phase 02-display-and-integration]: New Game resets state in place (no scene reload) — reuses existing 100 cell buttons [02-03]
+- [Phase 03-setup-and-game-flow]: Setup screen initialized once at _ready() — _fade_to_setup() shows it without re-init, preserving LineEdit text and ButtonGroup state between games [03-01]
+- [Phase 03-setup-and-game-flow]: Name fields pre-filled with random fun names at startup; empty field fallback in _on_start_game_pressed handles manual clears [03-01]
 
 ### Pending Todos
 
@@ -104,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T20:26:53.835Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-setup-and-game-flow/03-CONTEXT.md
+Last session: 2026-03-14T23:52:17.393Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

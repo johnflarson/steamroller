@@ -26,7 +26,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **WIN-01**: Game ends when a player reaches 5 points
 - [x] **WIN-02**: Win announcement screen with final scores
-- [ ] **WIN-03**: Play Again returns to player count/name selection
+- [x] **WIN-03**: Play Again returns to player count/name selection
 
 ### UI
 
@@ -38,8 +38,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Setup
 
-- [ ] **SETUP-01**: Player count selection (2-4) at game start
-- [ ] **SETUP-02**: Player name entry at game start
+- [x] **SETUP-01**: Player count selection (2-4) at game start
+- [x] **SETUP-02**: Player name entry at game start
 
 ### Export
 
@@ -95,9 +95,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-03 | Phase 2 | Complete (02-01) |
 | UI-04 | Phase 2 | Complete (02-01) |
 | UI-05 | Phase 2 | Complete (02-01) |
-| SETUP-01 | Phase 3 | Pending |
-| SETUP-02 | Phase 3 | Pending |
-| WIN-03 | Phase 3 | Pending |
+| SETUP-01 | Phase 3 | Complete |
+| SETUP-02 | Phase 3 | Complete |
+| WIN-03 | Phase 3 | Complete |
 | EXPORT-01 | Phase 4 | Pending |
 | EXPORT-02 | Phase 4 | Pending |
 
