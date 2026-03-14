@@ -13,7 +13,7 @@ Four phases build the game from the inside out: correct game logic first, visual
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Core game logic, state machine, and data model running correctly in the editor (completed 2026-03-14)
-- [ ] **Phase 2: Display and Integration** - Full visual layer wired to working logic; first HTML5 export test
+- [x] **Phase 2: Display and Integration** - Full visual layer wired to working logic; first HTML5 export test (completed 2026-03-14)
 - [ ] **Phase 3: Setup and Game Flow** - Player count selection, name entry, and complete restart flow
 - [ ] **Phase 4: Distribution** - HTML5 and desktop export builds verified on target platforms
 
@@ -45,7 +45,7 @@ Plans:
   3. The game log shows each roll, claim, score event, and auto-reroll in scrollable history
   4. When a line scores, the scoring cells briefly flash before the point is awarded
   5. The game loads and plays correctly in a web browser from an HTML5 export
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md — Dark theme, muted colors, rounded cells, border highlights, HUD sidebar (completed 2026-03-14)
@@ -79,6 +79,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-14 |
-| 2. Display and Integration | 2/3 | In Progress|  |
+| 2. Display and Integration | 3/3 | Complete   | 2026-03-14 |
 | 3. Setup and Game Flow | 0/? | Not started | - |
 | 4. Distribution | 0/? | Not started | - |
