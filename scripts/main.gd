@@ -43,6 +43,11 @@ var current_roll := 0
 @onready var game_log: RichTextLabel = $HBoxContainer/Sidebar/LogScroll/GameLog
 
 # ---------------------------------------------------------------------------
+# Highlight color for valid cells
+# ---------------------------------------------------------------------------
+const HIGHLIGHT_COLOR := Color(1, 1, 0.5, 1)  # Light yellow
+
+# ---------------------------------------------------------------------------
 # Line detection directions (horizontal, vertical, two diagonals)
 # ---------------------------------------------------------------------------
 const DIRECTIONS := [
@@ -131,20 +136,68 @@ func _on_roll_button_pressed() -> void:
 # Cell press handler (stub — full claiming logic implemented in Plan 02)
 # ---------------------------------------------------------------------------
 func _on_cell_pressed(row: int, col: int) -> void:
-	pass
+	if state != GameState.WAIT_PICK:
+		return
+	if owner_grid[row][col] != -1:
+		return  # Already claimed
+	if board_numbers[row][col] != current_roll:
+		return  # Does not match current roll
+	_claim_cell(row, col)
 
 # ---------------------------------------------------------------------------
 # Highlight / clear stubs (Plan 02 implements visual highlighting)
 # ---------------------------------------------------------------------------
 func _highlight_valid_cells() -> void:
-	# Stub: iterate grid but take no action yet — Plan 02 adds color feedback
+	var valid_count := 0
 	for r in rows:
 		for c in cols:
-			pass
+			var btn: Button = cell_buttons[r][c]
+			if owner_grid[r][c] != -1:
+				# Already claimed — leave as-is (player color, disabled)
+				continue
+			if board_numbers[r][c] == current_roll:
+				# Valid move: highlight and ensure enabled
+				_set_cell_color(btn, HIGHLIGHT_COLOR)
+				btn.disabled = false
+				valid_count += 1
+			else:
+				# Unclaimed but not a valid move — reset to neutral appearance
+				btn.remove_theme_stylebox_override("normal")
+				btn.remove_theme_stylebox_override("hover")
+				btn.remove_theme_stylebox_override("pressed")
+				btn.remove_theme_stylebox_override("disabled")
+				btn.disabled = true  # Not selectable this turn
+	if valid_count == 0:
+		_check_and_handle_no_moves()
 
 func _clear_highlights() -> void:
-	# Stub: Plan 02 implements
-	pass
+	for r in rows:
+		for c in cols:
+			if owner_grid[r][c] != -1:
+				# Claimed — leave player color intact
+				continue
+			var btn: Button = cell_buttons[r][c]
+			btn.remove_theme_stylebox_override("normal")
+			btn.remove_theme_stylebox_override("hover")
+			btn.remove_theme_stylebox_override("pressed")
+			btn.remove_theme_stylebox_override("disabled")
+			btn.disabled = false  # Re-enable unclaimed cells for next turn
+
+# ---------------------------------------------------------------------------
+# Cell claiming
+# NOTE: Signal connections in _build_grid() are made once at _ready().
+# If a "Play Again" feature is added in Phase 3, ensure _build_grid() is not
+# called again without disconnecting existing signals first to avoid double-fire.
+# ---------------------------------------------------------------------------
+func _claim_cell(row: int, col: int) -> void:
+	owner_grid[row][col] = current_player
+	cell_buttons[row][col].disabled = true
+	_set_cell_color(cell_buttons[row][col], players[current_player].color)
+	_log("%s claimed cell (%d, %d)" % [players[current_player].name, row, col])
+	_clear_highlights()
+	# Plan 03: _check_score(row, col, current_player)
+	# Plan 03: _check_win_or_stalemate()
+	_advance_turn()
 
 # ---------------------------------------------------------------------------
 # UI update
@@ -195,8 +248,8 @@ func _in_bounds(r: int, c: int) -> bool:
 # ---------------------------------------------------------------------------
 func _advance_turn() -> void:
 	current_player = (current_player + 1) % player_count
+	current_roll = 0
 	state = GameState.WAIT_ROLL
-	_clear_highlights()
 	_update_ui()
 
 # ---------------------------------------------------------------------------
