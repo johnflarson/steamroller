@@ -101,3 +101,90 @@ custom_minimum_size = Vector2(0, 20)
 
 [node name="NewGameButton" type="Button" parent="WinOverlay/Panel/VBox"]
 text = "New Game"
+
+[node name="SetupOverlay" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+visible = true
+
+[node name="Dimmer" type="ColorRect" parent="SetupOverlay"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.65)
+
+[node name="SetupCard" type="PanelContainer" parent="SetupOverlay"]
+anchor_left = 0.25
+anchor_top = 0.15
+anchor_right = 0.75
+anchor_bottom = 0.85
+
+[node name="VBox" type="VBoxContainer" parent="SetupOverlay/SetupCard"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="CountRow" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox"]
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="CountBtn2" type="Button" parent="SetupOverlay/SetupCard/VBox/CountRow"]
+toggle_mode = true
+text = "2"
+custom_minimum_size = Vector2(48, 36)
+
+[node name="CountBtn3" type="Button" parent="SetupOverlay/SetupCard/VBox/CountRow"]
+toggle_mode = true
+text = "3"
+custom_minimum_size = Vector2(48, 36)
+
+[node name="CountBtn4" type="Button" parent="SetupOverlay/SetupCard/VBox/CountRow"]
+toggle_mode = true
+text = "4"
+custom_minimum_size = Vector2(48, 36)
+
+[node name="NamesContainer" type="VBoxContainer" parent="SetupOverlay/SetupCard/VBox"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="PlayerRow0" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
+size_flags_horizontal = 3
+
+[node name="NameInput0" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow0"]
+size_flags_horizontal = 3
+placeholder_text = "Player 1"
+text = "Player 1"
+max_length = 15
+
+[node name="PlayerRow1" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
+size_flags_horizontal = 3
+
+[node name="NameInput1" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow1"]
+size_flags_horizontal = 3
+placeholder_text = "Player 2"
+text = "Player 2"
+max_length = 15
+
+[node name="PlayerRow2" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
+size_flags_horizontal = 3
+visible = false
+
+[node name="NameInput2" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow2"]
+size_flags_horizontal = 3
+placeholder_text = "Player 3"
+text = "Player 3"
+max_length = 15
+
+[node name="PlayerRow3" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
+size_flags_horizontal = 3
+visible = false
+
+[node name="NameInput3" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow3"]
+size_flags_horizontal = 3
+placeholder_text = "Player 4"
+text = "Player 4"
+max_length = 15
+
+[node name="StartButton" type="Button" parent="SetupOverlay/SetupCard/VBox"]
+text = "Start Game"

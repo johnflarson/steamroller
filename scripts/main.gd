@@ -31,6 +31,12 @@ const NEUTRAL_CELL := Color(0.22, 0.22, 0.27)
 const SPENT_ALPHA := 0.40
 
 # ---------------------------------------------------------------------------
+# Random name pools for empty name fields
+# ---------------------------------------------------------------------------
+const ADJECTIVES := ["Brave", "Lucky", "Swift", "Bold", "Calm", "Fierce", "Jolly", "Keen", "Nimble", "Proud", "Witty", "Zesty"]
+const NOUNS := ["Fox", "Bear", "Star", "Wolf", "Hawk", "Lion", "Owl", "Puma", "Rook", "Sage", "Wren", "Lynx"]
+
+# ---------------------------------------------------------------------------
 # Line detection directions (horizontal, vertical, two diagonals)
 # ---------------------------------------------------------------------------
 const DIRECTIONS := [
@@ -48,13 +54,8 @@ var owner_grid: Array = []      # [row][col] -> int (-1 unclaimed, 0..3 player i
 var scored_grid: Array = []     # [row][col] -> bool (spent/scored flag)
 var cell_buttons: Array = []    # [row][col] -> Button node reference
 
-var players: Array = [
-	{"name": "Player 1", "color": PLAYER_COLORS[0], "score": 0},
-	{"name": "Player 2", "color": PLAYER_COLORS[1], "score": 0},
-	{"name": "Player 3", "color": PLAYER_COLORS[2], "score": 0},
-	{"name": "Player 4", "color": PLAYER_COLORS[3], "score": 0},
-]
-var player_count := 4  # Default 4 for testing (exercises full player array)
+var players: Array = []
+var player_count := 2  # Default 2 (matches setup screen default)
 var current_player := 0
 var current_roll := 0
 
@@ -65,8 +66,9 @@ var score_labels: Array = []
 var score_panels: Array = []
 
 # ---------------------------------------------------------------------------
-# @onready UI node references
+# @onready UI node references — game UI
 # ---------------------------------------------------------------------------
+@onready var hbox_container: HBoxContainer = $HBoxContainer
 @onready var grid_container: GridContainer = $HBoxContainer/BoardPanel/GridContainer
 @onready var current_player_badge: PanelContainer = $HBoxContainer/Sidebar/SidebarContent/CurrentPlayerBadge
 @onready var current_player_name: Label = $HBoxContainer/Sidebar/SidebarContent/CurrentPlayerBadge/CurrentPlayerName
@@ -79,6 +81,27 @@ var score_panels: Array = []
 @onready var win_title_label: Label = $WinOverlay/Panel/VBox/TitleLabel
 @onready var win_scores_container: VBoxContainer = $WinOverlay/Panel/VBox/ScoresContainer
 @onready var new_game_button: Button = $WinOverlay/Panel/VBox/NewGameButton
+
+# ---------------------------------------------------------------------------
+# @onready UI node references — setup screen
+# ---------------------------------------------------------------------------
+@onready var setup_overlay: Control = $SetupOverlay
+@onready var count_btn_2: Button = $SetupOverlay/SetupCard/VBox/CountRow/CountBtn2
+@onready var count_btn_3: Button = $SetupOverlay/SetupCard/VBox/CountRow/CountBtn3
+@onready var count_btn_4: Button = $SetupOverlay/SetupCard/VBox/CountRow/CountBtn4
+@onready var player_row_0: HBoxContainer = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow0
+@onready var player_row_1: HBoxContainer = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow1
+@onready var player_row_2: HBoxContainer = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow2
+@onready var player_row_3: HBoxContainer = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow3
+@onready var name_input_0: LineEdit = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow0/NameInput0
+@onready var name_input_1: LineEdit = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow1/NameInput1
+@onready var name_input_2: LineEdit = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow2/NameInput2
+@onready var name_input_3: LineEdit = $SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow3/NameInput3
+@onready var start_button: Button = $SetupOverlay/SetupCard/VBox/StartButton
+
+# Collected arrays for easy iteration
+var name_inputs: Array = []
+var player_rows: Array = []
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -106,14 +129,246 @@ func _ready() -> void:
 	# Apply large font to roll result label
 	roll_result_label.add_theme_font_size_override("font_size", 48)
 
+	# Build the board grid (once at _ready — never again)
 	_init_arrays()
 	_generate_board()
 	_build_grid()
-	_setup_score_strip()
-	_update_ui()
+
+	# Wire persistent signals
 	roll_button.pressed.connect(_on_roll_button_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
 	_style_button_gold(new_game_button)
+
+	# Hide game UI at startup — setup screen will be shown instead
+	hbox_container.visible = false
+
+	# Populate iteration arrays after @onready vars are resolved
+	name_inputs = [name_input_0, name_input_1, name_input_2, name_input_3]
+	player_rows = [player_row_0, player_row_1, player_row_2, player_row_3]
+
+	# Show setup screen (it starts visible=true in the scene)
+	_init_setup_screen()
+
+# ---------------------------------------------------------------------------
+# Setup screen initialization — called once at _ready()
+# ---------------------------------------------------------------------------
+func _init_setup_screen() -> void:
+	# Style the setup card background
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color = SIDEBAR_BG
+	card_style.set_corner_radius_all(10)
+	card_style.corner_detail = 4
+	card_style.set_content_margin_all(24)
+	$SetupOverlay/SetupCard.add_theme_stylebox_override("panel", card_style)
+
+	# Create ButtonGroup for exclusive count selection
+	var bg := ButtonGroup.new()
+	for btn in [count_btn_2, count_btn_3, count_btn_4]:
+		btn.toggle_mode = true
+		btn.button_group = bg
+	bg.pressed.connect(_on_count_selected)
+
+	# Default to 2 players
+	count_btn_2.button_pressed = true
+	_style_button_gold(count_btn_2)
+	_style_button_neutral(count_btn_3)
+	_style_button_neutral(count_btn_4)
+
+	# Style each name input with player-colored border
+	for i in 4:
+		var field: LineEdit = name_inputs[i]
+		var field_style := StyleBoxFlat.new()
+		field_style.bg_color = Color(0.20, 0.20, 0.25)
+		field_style.set_border_width_all(2)
+		field_style.border_color = PLAYER_COLORS[i]
+		field_style.set_corner_radius_all(6)
+		field_style.corner_detail = 4
+		field_style.set_content_margin_all(6)
+		field.add_theme_stylebox_override("normal", field_style)
+		field.add_theme_stylebox_override("focus", field_style)
+		field.add_theme_color_override("font_color", Color.WHITE)
+		field.add_theme_color_override("font_placeholder_color", Color(0.6, 0.6, 0.6))
+
+	# Wire Enter key chaining between fields
+	name_inputs[0].text_submitted.connect(func(_t: String): name_inputs[1].grab_focus())
+	name_inputs[1].text_submitted.connect(func(_t: String): _on_enter_from_field(1))
+	name_inputs[2].text_submitted.connect(func(_t: String): _on_enter_from_field(2))
+	name_inputs[3].text_submitted.connect(func(_t: String): _on_start_game_pressed())
+
+	# Style Start Game button
+	_style_button_gold(start_button)
+	start_button.pressed.connect(_on_start_game_pressed)
+
+	# Ensure initial visibility matches 2-player default (rows 2/3 hidden)
+	player_rows[2].visible = false
+	player_rows[3].visible = false
+
+# ---------------------------------------------------------------------------
+# Count button selection handler
+# ---------------------------------------------------------------------------
+func _on_count_selected(btn: BaseButton) -> void:
+	var count: int = int(btn.text)
+	# Update button styles: pressed=gold, others=neutral
+	for b in [count_btn_2, count_btn_3, count_btn_4]:
+		if b.button_pressed:
+			_style_button_gold(b)
+		else:
+			_style_button_neutral(b)
+	_update_name_field_visibility(count)
+
+# ---------------------------------------------------------------------------
+# Enter key handler for chained focus in name fields
+# ---------------------------------------------------------------------------
+func _on_enter_from_field(idx: int) -> void:
+	var selected: int = _get_selected_count()
+	if idx + 1 < selected:
+		name_inputs[idx + 1].grab_focus()
+	else:
+		_on_start_game_pressed()
+
+# ---------------------------------------------------------------------------
+# Neutral button style (unselected count buttons + general dark buttons)
+# ---------------------------------------------------------------------------
+func _style_button_neutral(btn: Button) -> void:
+	var normal_style := StyleBoxFlat.new()
+	normal_style.bg_color = NEUTRAL_CELL
+	normal_style.set_corner_radius_all(8)
+	normal_style.corner_detail = 4
+	btn.add_theme_stylebox_override("normal", normal_style)
+
+	var hover_style := StyleBoxFlat.new()
+	hover_style.bg_color = NEUTRAL_CELL.lightened(0.15)
+	hover_style.set_corner_radius_all(8)
+	hover_style.corner_detail = 4
+	btn.add_theme_stylebox_override("hover", hover_style)
+
+	var pressed_style := StyleBoxFlat.new()
+	pressed_style.bg_color = NEUTRAL_CELL.darkened(0.15)
+	pressed_style.set_corner_radius_all(8)
+	pressed_style.corner_detail = 4
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+
+	var disabled_style := StyleBoxFlat.new()
+	disabled_style.bg_color = NEUTRAL_CELL.darkened(0.3)
+	disabled_style.set_corner_radius_all(8)
+	disabled_style.corner_detail = 4
+	btn.add_theme_stylebox_override("disabled", disabled_style)
+
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_color_disabled", Color(0.5, 0.5, 0.5))
+
+# ---------------------------------------------------------------------------
+# Show/hide name field rows with slide animation when count changes
+# ---------------------------------------------------------------------------
+func _update_name_field_visibility(count: int) -> void:
+	if count >= 3:
+		_show_player_row(player_rows[2])
+	else:
+		_hide_player_row(player_rows[2])
+	if count >= 4:
+		_show_player_row(player_rows[3])
+	else:
+		_hide_player_row(player_rows[3])
+
+func _show_player_row(row: Control) -> void:
+	row.visible = true
+	row.custom_minimum_size = Vector2(0, 0)
+	row.modulate.a = 0.0
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(row, "custom_minimum_size", Vector2(0, 40), 0.15)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(row, "modulate:a", 1.0, 0.15)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+func _hide_player_row(row: Control) -> void:
+	if not row.visible:
+		return
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(row, "custom_minimum_size", Vector2(0, 0), 0.12)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(row, "modulate:a", 0.0, 0.12)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await tw.finished
+	row.visible = false
+
+# ---------------------------------------------------------------------------
+# Get currently selected player count from ButtonGroup state
+# ---------------------------------------------------------------------------
+func _get_selected_count() -> int:
+	if count_btn_2.button_pressed:
+		return 2
+	if count_btn_3.button_pressed:
+		return 3
+	return 4
+
+# ---------------------------------------------------------------------------
+# Random fun name for empty name fields
+# ---------------------------------------------------------------------------
+func _random_fun_name() -> String:
+	return ADJECTIVES[randi() % ADJECTIVES.size()] + " " + NOUNS[randi() % NOUNS.size()]
+
+# ---------------------------------------------------------------------------
+# Start Game button handler — reads setup, initializes game, fades to gameplay
+# ---------------------------------------------------------------------------
+func _on_start_game_pressed() -> void:
+	player_count = _get_selected_count()
+	# Build dynamic players array from setup state
+	players = []
+	for i in player_count:
+		var name_text: String = name_inputs[i].text.strip_edges()
+		if name_text.is_empty():
+			name_text = _random_fun_name()
+		players.append({"name": name_text, "color": PLAYER_COLORS[i], "score": 0})
+	# Rebuild score strip for the selected player count
+	for child in score_strip.get_children():
+		child.queue_free()
+	score_labels.clear()
+	score_panels.clear()
+	_setup_score_strip()
+	# Reset game state
+	current_player = 0
+	current_roll = 0
+	state = GameState.WAIT_ROLL
+	# Reset data grids
+	for r in rows:
+		for c in cols:
+			owner_grid[r][c] = -1
+			scored_grid[r][c] = false
+	# Generate fresh board and update buttons in place (never _build_grid() again)
+	_generate_board()
+	for r in rows:
+		for c in cols:
+			var btn: Button = cell_buttons[r][c]
+			btn.text = str(board_numbers[r][c])
+			btn.disabled = false
+			btn.scale = Vector2.ONE
+			_set_cell_color(btn, NEUTRAL_CELL)
+	game_log.clear()
+	# Fade to game UI, then update UI after transition completes
+	await _fade_to_game()
+	_update_ui()
+
+# ---------------------------------------------------------------------------
+# Fade transitions between setup and game
+# ---------------------------------------------------------------------------
+func _fade_to_game() -> void:
+	var tw := create_tween()
+	tw.tween_property(setup_overlay, "modulate:a", 0.0, 0.2)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await tw.finished
+	setup_overlay.visible = false
+	hbox_container.visible = true
+
+func _fade_to_setup() -> void:
+	win_overlay.visible = false
+	setup_overlay.modulate.a = 0.0
+	setup_overlay.visible = true
+	hbox_container.visible = false
+	var tw := create_tween()
+	tw.tween_property(setup_overlay, "modulate:a", 1.0, 0.2)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 # ---------------------------------------------------------------------------
 # Roll button gold styling
@@ -289,8 +544,7 @@ func _clear_highlights() -> void:
 # ---------------------------------------------------------------------------
 # Cell claiming
 # NOTE: Signal connections in _build_grid() are made once at _ready().
-# If a "Play Again" feature is added in Phase 3, ensure _build_grid() is not
-# called again without disconnecting existing signals first to avoid double-fire.
+# _build_grid() must never be called again — double-fires signals on 100 buttons.
 # ---------------------------------------------------------------------------
 func _claim_cell(row: int, col: int) -> void:
 	owner_grid[row][col] = current_player
@@ -490,33 +744,11 @@ func _flash_score_panel(player_idx: int) -> void:
 	, 0.0, 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 # ---------------------------------------------------------------------------
-# New game — reset all state, regenerate board, update existing buttons in place
+# New Game — route back to setup screen (WIN-03)
+# Setup screen preserves previous names and count (LineEdit.text values persist)
 # ---------------------------------------------------------------------------
 func _on_new_game_pressed() -> void:
-	# Reset game state
-	current_player = 0
-	current_roll = 0
-	state = GameState.WAIT_ROLL
-	for i in player_count:
-		players[i].score = 0
-	# Reset data grids
-	for r in rows:
-		for c in cols:
-			owner_grid[r][c] = -1
-			scored_grid[r][c] = false
-	# Generate fresh board numbers and update buttons in place (no rebuild)
-	_generate_board()
-	for r in rows:
-		for c in cols:
-			var btn: Button = cell_buttons[r][c]
-			btn.text = str(board_numbers[r][c])
-			btn.disabled = false
-			btn.scale = Vector2.ONE
-			_set_cell_color(btn, NEUTRAL_CELL)
-	# Hide overlay, clear log, update UI
-	win_overlay.visible = false
-	game_log.clear()
-	_update_ui()
+	_fade_to_setup()
 
 # ---------------------------------------------------------------------------
 # Disable all cells (used on game over)
