@@ -18,13 +18,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Scoring
 
-- [ ] **SCOR-01**: +1 point when placement creates 3+ owned cells in a row (horizontal, vertical, diagonal)
-- [ ] **SCOR-02**: Max 1 point per turn regardless of lines formed
+- [x] **SCOR-01**: +1 point when placement creates 3+ owned cells in a row (horizontal, vertical, diagonal)
+- [x] **SCOR-02**: Max 1 point per turn regardless of lines formed
 - [ ] **SCOR-03**: Line flash animation briefly highlights the scoring cells
 
 ### Win Condition
 
-- [ ] **WIN-01**: Game ends when a player reaches 5 points
+- [x] **WIN-01**: Game ends when a player reaches 5 points
 - [ ] **WIN-02**: Win announcement screen with final scores
 - [ ] **WIN-03**: Play Again returns to player count/name selection
 
@@ -85,9 +85,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOOP-04 | Phase 1 | Complete |
 | LOOP-05 | Phase 1 | Complete |
 | LOOP-06 | Phase 1 | Complete |
-| SCOR-01 | Phase 1 | Pending |
-| SCOR-02 | Phase 1 | Pending |
-| WIN-01 | Phase 1 | Pending |
+| SCOR-01 | Phase 1 | Complete |
+| SCOR-02 | Phase 1 | Complete |
+| WIN-01 | Phase 1 | Complete |
 | SCOR-03 | Phase 2 | Pending |
 | WIN-02 | Phase 2 | Pending |
 | UI-01 | Phase 2 | Pending |
