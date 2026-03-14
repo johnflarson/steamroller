@@ -195,8 +195,9 @@ func _claim_cell(row: int, col: int) -> void:
 	_set_cell_color(cell_buttons[row][col], players[current_player].color)
 	_log("%s claimed cell (%d, %d)" % [players[current_player].name, row, col])
 	_clear_highlights()
-	# Plan 03: _check_score(row, col, current_player)
-	# Plan 03: _check_win_or_stalemate()
+	_check_score(row, col, current_player)
+	if _check_win_or_stalemate():
+		return
 	_advance_turn()
 
 # ---------------------------------------------------------------------------
@@ -279,7 +280,9 @@ func _check_score(row: int, col: int, player_idx: int) -> bool:
 		if cells.size() >= 3:
 			for cell in cells:
 				scored_grid[cell.y][cell.x] = true
-			return true  # Max 1 point per turn
+			players[player_idx].score += 1
+			_log("%s scored! Line of %d detected. Score: %d" % [players[player_idx].name, cells.size(), players[player_idx].score])
+			return true  # Max 1 point per turn — stop checking other directions
 	return false
 
 # ---------------------------------------------------------------------------
@@ -341,7 +344,7 @@ func _check_win_or_stalemate() -> bool:
 	# Win check
 	if players[current_player].score >= WIN_SCORE:
 		state = GameState.GAME_OVER
-		_log("Game over! %s wins!" % players[current_player].name)
+		_log("Game over! %s wins with %d points!" % [players[current_player].name, players[current_player].score])
 		_disable_all_cells()
 		_update_ui()
 		return true
