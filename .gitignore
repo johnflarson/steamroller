@@ -1,0 +1,12 @@
+# Godot-generated files
+.godot/
+*.uid
+
+# HTML5 export output (generated — export from Godot Editor)
+export/web/*.html
+export/web/*.js
+export/web/*.wasm
+export/web/*.pck
+export/web/*.png
+export/web/*.ico
+export/web/*.audio.worklet.js
