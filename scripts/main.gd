@@ -1,4 +1,4 @@
-extends Control
+extends PanelContainer
 
 # ---------------------------------------------------------------------------
 # State machine
@@ -15,37 +15,20 @@ var dice_faces := 6
 const WIN_SCORE := 5
 
 # ---------------------------------------------------------------------------
-# Data model
+# Color palette — muted player colors that pop on dark backgrounds
 # ---------------------------------------------------------------------------
-var board_numbers: Array = []   # [row][col] -> int 1..dice_faces
-var owner_grid: Array = []      # [row][col] -> int (-1 unclaimed, 0..3 player index)
-var scored_grid: Array = []     # [row][col] -> bool (spent/scored flag)
-var cell_buttons: Array = []    # [row][col] -> Button node reference
-
-var players: Array = [
-	{"name": "Player 1", "color": Color.RED,    "score": 0},
-	{"name": "Player 2", "color": Color.BLUE,   "score": 0},
-	{"name": "Player 3", "color": Color.GREEN,  "score": 0},
-	{"name": "Player 4", "color": Color.YELLOW, "score": 0},
+const PLAYER_HEX := ["#E07060", "#6080C8", "#70A870", "#D4A040"]
+const PLAYER_COLORS := [
+	Color(0.878, 0.439, 0.376),  # Coral       — Player 1
+	Color(0.376, 0.502, 0.784),  # Slate blue  — Player 2
+	Color(0.439, 0.659, 0.439),  # Sage green  — Player 3
+	Color(0.831, 0.627, 0.251),  # Amber       — Player 4
 ]
-var player_count := 4  # Default 4 for testing (exercises full player array)
-var current_player := 0
-var current_roll := 0
-
-# ---------------------------------------------------------------------------
-# @onready UI node references
-# ---------------------------------------------------------------------------
-@onready var grid_container: GridContainer = $HBoxContainer/BoardPanel/GridContainer
-@onready var current_player_label: Label = $HBoxContainer/Sidebar/CurrentPlayerLabel
-@onready var roll_result_label: Label = $HBoxContainer/Sidebar/RollResultLabel
-@onready var roll_button: Button = $HBoxContainer/Sidebar/RollButton
-@onready var scores_label: Label = $HBoxContainer/Sidebar/ScoresLabel
-@onready var game_log: RichTextLabel = $HBoxContainer/Sidebar/LogScroll/GameLog
-
-# ---------------------------------------------------------------------------
-# Highlight color for valid cells
-# ---------------------------------------------------------------------------
-const HIGHLIGHT_COLOR := Color(1, 1, 0.5, 1)  # Light yellow
+const DARK_BG := Color(0.13, 0.13, 0.16)
+const SIDEBAR_BG := Color(0.17, 0.17, 0.21)
+const ACCENT_GOLD := Color(0.90, 0.75, 0.25)
+const NEUTRAL_CELL := Color(0.22, 0.22, 0.27)
+const SPENT_ALPHA := 0.40
 
 # ---------------------------------------------------------------------------
 # Line detection directions (horizontal, vertical, two diagonals)
@@ -58,14 +41,122 @@ const DIRECTIONS := [
 ]
 
 # ---------------------------------------------------------------------------
+# Data model
+# ---------------------------------------------------------------------------
+var board_numbers: Array = []   # [row][col] -> int 1..dice_faces
+var owner_grid: Array = []      # [row][col] -> int (-1 unclaimed, 0..3 player index)
+var scored_grid: Array = []     # [row][col] -> bool (spent/scored flag)
+var cell_buttons: Array = []    # [row][col] -> Button node reference
+
+var players: Array = [
+	{"name": "Player 1", "color": PLAYER_COLORS[0], "score": 0},
+	{"name": "Player 2", "color": PLAYER_COLORS[1], "score": 0},
+	{"name": "Player 3", "color": PLAYER_COLORS[2], "score": 0},
+	{"name": "Player 4", "color": PLAYER_COLORS[3], "score": 0},
+]
+var player_count := 4  # Default 4 for testing (exercises full player array)
+var current_player := 0
+var current_roll := 0
+
+# ---------------------------------------------------------------------------
+# Score labels for the score strip (created in _setup_score_strip)
+# ---------------------------------------------------------------------------
+var score_labels: Array = []
+
+# ---------------------------------------------------------------------------
+# @onready UI node references
+# ---------------------------------------------------------------------------
+@onready var grid_container: GridContainer = $HBoxContainer/BoardPanel/GridContainer
+@onready var current_player_badge: PanelContainer = $HBoxContainer/Sidebar/SidebarContent/CurrentPlayerBadge
+@onready var current_player_name: Label = $HBoxContainer/Sidebar/SidebarContent/CurrentPlayerBadge/CurrentPlayerName
+@onready var roll_result_label: Label = $HBoxContainer/Sidebar/SidebarContent/RollResultLabel
+@onready var roll_button: Button = $HBoxContainer/Sidebar/SidebarContent/RollButton
+@onready var score_strip: HBoxContainer = $HBoxContainer/Sidebar/SidebarContent/ScoreStrip
+@onready var game_log: RichTextLabel = $HBoxContainer/Sidebar/SidebarContent/LogScroll/GameLog
+@onready var log_scroll: ScrollContainer = $HBoxContainer/Sidebar/SidebarContent/LogScroll
+@onready var win_overlay: Control = $WinOverlay
+@onready var win_title_label: Label = $WinOverlay/Panel/VBox/TitleLabel
+@onready var win_scores_label: Label = $WinOverlay/Panel/VBox/ScoresLabel
+
+# ---------------------------------------------------------------------------
 # Lifecycle
 # ---------------------------------------------------------------------------
 func _ready() -> void:
+	# Apply dark background to root PanelContainer
+	var root_style := StyleBoxFlat.new()
+	root_style.bg_color = DARK_BG
+	add_theme_stylebox_override("panel", root_style)
+
+	# GridContainer gaps (2-3px between cells)
+	grid_container.add_theme_constant_override("h_separation", 3)
+	grid_container.add_theme_constant_override("v_separation", 3)
+
+	# Style the sidebar background
+	var sidebar_style := StyleBoxFlat.new()
+	sidebar_style.bg_color = SIDEBAR_BG
+	sidebar_style.set_corner_radius_all(8)
+	sidebar_style.corner_detail = 4
+	$HBoxContainer/Sidebar.add_theme_stylebox_override("panel", sidebar_style)
+
+	# Style the roll button with gold accent
+	_style_roll_button()
+
+	# Disable horizontal scrolling on log
+	log_scroll.scroll_horizontal_enabled = false
+
+	# Apply large font to roll result label
+	roll_result_label.add_theme_font_size_override("font_size", 48)
+
 	_init_arrays()
 	_generate_board()
 	_build_grid()
+	_setup_score_strip()
 	_update_ui()
 	roll_button.pressed.connect(_on_roll_button_pressed)
+
+# ---------------------------------------------------------------------------
+# Roll button gold styling
+# ---------------------------------------------------------------------------
+func _style_roll_button() -> void:
+	var normal_style := StyleBoxFlat.new()
+	normal_style.bg_color = ACCENT_GOLD
+	normal_style.set_corner_radius_all(8)
+	normal_style.corner_detail = 4
+	roll_button.add_theme_stylebox_override("normal", normal_style)
+
+	var hover_style := StyleBoxFlat.new()
+	hover_style.bg_color = ACCENT_GOLD.lightened(0.15)
+	hover_style.set_corner_radius_all(8)
+	hover_style.corner_detail = 4
+	roll_button.add_theme_stylebox_override("hover", hover_style)
+
+	var pressed_style := StyleBoxFlat.new()
+	pressed_style.bg_color = ACCENT_GOLD.darkened(0.15)
+	pressed_style.set_corner_radius_all(8)
+	pressed_style.corner_detail = 4
+	roll_button.add_theme_stylebox_override("pressed", pressed_style)
+
+	var disabled_style := StyleBoxFlat.new()
+	disabled_style.bg_color = ACCENT_GOLD.darkened(0.5)
+	disabled_style.set_corner_radius_all(8)
+	disabled_style.corner_detail = 4
+	roll_button.add_theme_stylebox_override("disabled", disabled_style)
+
+	roll_button.add_theme_color_override("font_color", Color.BLACK)
+	roll_button.add_theme_color_override("font_color_disabled", Color(0.3, 0.3, 0.3))
+
+# ---------------------------------------------------------------------------
+# Score strip setup — one label per player, created once at _ready()
+# ---------------------------------------------------------------------------
+func _setup_score_strip() -> void:
+	score_labels.clear()
+	for i in player_count:
+		var lbl := Label.new()
+		lbl.add_theme_color_override("font_color", PLAYER_COLORS[i])
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		score_strip.add_child(lbl)
+		score_labels.append(lbl)
 
 # ---------------------------------------------------------------------------
 # Array initialization
@@ -117,6 +208,11 @@ func _build_grid() -> void:
 			btn.text = str(board_numbers[r][c])
 			btn.custom_minimum_size = Vector2(50, 50)
 			btn.pressed.connect(_on_cell_pressed.bind(r, c))
+			# Apply neutral dark style with rounded corners
+			_set_cell_color(btn, NEUTRAL_CELL)
+			# White text is readable on dark/colored backgrounds
+			btn.add_theme_color_override("font_color", Color.WHITE)
+			btn.add_theme_color_override("font_color_disabled", Color.WHITE)
 			grid_container.add_child(btn)
 			cell_buttons[r][c] = btn
 
@@ -129,11 +225,11 @@ func _on_roll_button_pressed() -> void:
 	current_roll = randi_range(1, dice_faces)
 	state = GameState.WAIT_PICK
 	_highlight_valid_cells()
-	_log("Player %s rolled a %d" % [players[current_player].name, current_roll])
+	_log("%s rolled a %d" % [players[current_player].name, current_roll], current_player)
 	_update_ui()
 
 # ---------------------------------------------------------------------------
-# Cell press handler (stub — full claiming logic implemented in Plan 02)
+# Cell press handler
 # ---------------------------------------------------------------------------
 func _on_cell_pressed(row: int, col: int) -> void:
 	if state != GameState.WAIT_PICK:
@@ -145,7 +241,7 @@ func _on_cell_pressed(row: int, col: int) -> void:
 	_claim_cell(row, col)
 
 # ---------------------------------------------------------------------------
-# Highlight / clear stubs (Plan 02 implements visual highlighting)
+# Highlight valid cells with gold border; dim non-matching unclaimed cells
 # ---------------------------------------------------------------------------
 func _highlight_valid_cells() -> void:
 	var valid_count := 0
@@ -156,17 +252,14 @@ func _highlight_valid_cells() -> void:
 				# Already claimed — leave as-is (player color, disabled)
 				continue
 			if board_numbers[r][c] == current_roll:
-				# Valid move: highlight and ensure enabled
-				_set_cell_color(btn, HIGHLIGHT_COLOR)
+				# Valid move: gold border on neutral background
+				_set_cell_color(btn, NEUTRAL_CELL, ACCENT_GOLD, 3)
 				btn.disabled = false
 				valid_count += 1
 			else:
-				# Unclaimed but not a valid move — reset to neutral appearance
-				btn.remove_theme_stylebox_override("normal")
-				btn.remove_theme_stylebox_override("hover")
-				btn.remove_theme_stylebox_override("pressed")
-				btn.remove_theme_stylebox_override("disabled")
-				btn.disabled = true  # Not selectable this turn
+				# Unclaimed but not a valid move — reset to neutral, disable
+				_set_cell_color(btn, NEUTRAL_CELL)
+				btn.disabled = true
 	if valid_count == 0:
 		_check_and_handle_no_moves()
 
@@ -174,13 +267,10 @@ func _clear_highlights() -> void:
 	for r in rows:
 		for c in cols:
 			if owner_grid[r][c] != -1:
-				# Claimed — leave player color intact
+				# Claimed — leave player color intact (or spent appearance if scored)
 				continue
 			var btn: Button = cell_buttons[r][c]
-			btn.remove_theme_stylebox_override("normal")
-			btn.remove_theme_stylebox_override("hover")
-			btn.remove_theme_stylebox_override("pressed")
-			btn.remove_theme_stylebox_override("disabled")
+			_set_cell_color(btn, NEUTRAL_CELL)
 			btn.disabled = false  # Re-enable unclaimed cells for next turn
 
 # ---------------------------------------------------------------------------
@@ -192,8 +282,8 @@ func _clear_highlights() -> void:
 func _claim_cell(row: int, col: int) -> void:
 	owner_grid[row][col] = current_player
 	cell_buttons[row][col].disabled = true
-	_set_cell_color(cell_buttons[row][col], players[current_player].color)
-	_log("%s claimed cell (%d, %d)" % [players[current_player].name, row, col])
+	_set_cell_color(cell_buttons[row][col], PLAYER_COLORS[current_player])
+	_log("%s claimed cell (%d, %d)" % [players[current_player].name, row, col], current_player)
 	_clear_highlights()
 	_check_score(row, col, current_player)
 	if _check_win_or_stalemate():
@@ -201,42 +291,79 @@ func _claim_cell(row: int, col: int) -> void:
 	_advance_turn()
 
 # ---------------------------------------------------------------------------
-# UI update
+# UI update — badge, large roll, score strip, roll button state
 # ---------------------------------------------------------------------------
 func _update_ui() -> void:
-	current_player_label.text = "Current Player: %s" % players[current_player].name
+	_update_player_badge()
+	_update_score_strip()
 
 	if current_roll == 0:
-		roll_result_label.text = "Roll: -"
+		roll_result_label.text = "-"
 	else:
-		roll_result_label.text = "Roll: %d" % current_roll
+		roll_result_label.text = str(current_roll)
 
 	# Roll button is only active during WAIT_ROLL
 	roll_button.disabled = (state != GameState.WAIT_ROLL)
 
-	# Scores — one line per player
-	var score_lines := ""
-	for i in player_count:
-		score_lines += "%s: %d\n" % [players[i].name, players[i].score]
-	scores_label.text = score_lines.strip_edges()
+# ---------------------------------------------------------------------------
+# Current player badge — colored chip with player name
+# ---------------------------------------------------------------------------
+func _update_player_badge() -> void:
+	var badge_style := StyleBoxFlat.new()
+	badge_style.bg_color = PLAYER_COLORS[current_player]
+	badge_style.set_corner_radius_all(8)
+	badge_style.corner_detail = 4
+	current_player_badge.add_theme_stylebox_override("panel", badge_style)
+	current_player_name.text = players[current_player].name
+	current_player_name.add_theme_color_override("font_color", Color.WHITE)
 
 # ---------------------------------------------------------------------------
-# Game log
+# Score strip — update all player score labels
 # ---------------------------------------------------------------------------
-func _log(message: String) -> void:
-	game_log.append_text(message + "\n")
+func _update_score_strip() -> void:
+	for i in score_labels.size():
+		score_labels[i].text = "%s: %d" % [players[i].name, players[i].score]
 
 # ---------------------------------------------------------------------------
-# Button color utility (Pattern 3) — creates new StyleBoxFlat per call
+# Game log — color-coded by player, with optional score emphasis
+# ---------------------------------------------------------------------------
+func _log(message: String, player_idx: int = -1) -> void:
+	if player_idx >= 0 and player_idx < player_count:
+		game_log.append_text("[color=%s]%s[/color]\n" % [PLAYER_HEX[player_idx], message])
+	else:
+		game_log.append_text(message + "\n")
+
+func _log_score(message: String, player_idx: int) -> void:
+	game_log.append_text("[color=%s][font_size=16]%s[/font_size][/color]\n" % [PLAYER_HEX[player_idx], message])
+
+# ---------------------------------------------------------------------------
+# Button color utility — creates StyleBoxFlat with rounded corners
+# Supports optional border (used for valid-move gold outline)
 # Must override all 4 states so disabled buttons keep their player color
 # ---------------------------------------------------------------------------
-func _set_cell_color(btn: Button, color: Color) -> void:
+func _set_cell_color(btn: Button, bg: Color, border_color: Color = Color.TRANSPARENT, border_px: int = 0) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = color
+	style.bg_color = bg
+	style.set_corner_radius_all(6)
+	style.corner_detail = 4
+	style.anti_aliasing = true
+	if border_px > 0:
+		style.set_border_width_all(border_px)
+		style.border_color = border_color
+		style.draw_center = true  # Keep bg color; border is additive
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_stylebox_override("hover", style)
 	btn.add_theme_stylebox_override("pressed", style)
 	btn.add_theme_stylebox_override("disabled", style)
+
+# ---------------------------------------------------------------------------
+# Spent cell visual — dimmed version of player color (scored lines)
+# ---------------------------------------------------------------------------
+func _set_cell_spent(row: int, col: int) -> void:
+	var player_idx := owner_grid[row][col]
+	var base_color := PLAYER_COLORS[player_idx]
+	var spent_color := Color(base_color.r, base_color.g, base_color.b, SPENT_ALPHA)
+	_set_cell_color(cell_buttons[row][col], spent_color)
 
 # ---------------------------------------------------------------------------
 # Bounds check helper
@@ -245,7 +372,7 @@ func _in_bounds(r: int, c: int) -> bool:
 	return r >= 0 and r < rows and c >= 0 and c < cols
 
 # ---------------------------------------------------------------------------
-# Turn advance (Plan 02 will call this after claiming a cell)
+# Turn advance
 # ---------------------------------------------------------------------------
 func _advance_turn() -> void:
 	current_player = (current_player + 1) % player_count
@@ -254,7 +381,7 @@ func _advance_turn() -> void:
 	_update_ui()
 
 # ---------------------------------------------------------------------------
-# Line detection (Pattern 4) — used by scoring in Plan 02
+# Line detection (Pattern 4)
 # ---------------------------------------------------------------------------
 func _collect_line(row: int, col: int, dir: Vector2i, player_idx: int) -> Array:
 	var cells := [Vector2i(col, row)]
@@ -280,10 +407,32 @@ func _check_score(row: int, col: int, player_idx: int) -> bool:
 		if cells.size() >= 3:
 			for cell in cells:
 				scored_grid[cell.y][cell.x] = true
+				_set_cell_spent(cell.y, cell.x)
 			players[player_idx].score += 1
-			_log("%s scored! Line of %d detected. Score: %d" % [players[player_idx].name, cells.size(), players[player_idx].score])
+			_log_score("%s scored! Line of %d. Score: %d" % [players[player_idx].name, cells.size(), players[player_idx].score], player_idx)
+			_animate_score_cells(cells)
 			return true  # Max 1 point per turn — stop checking other directions
 	return false
+
+# ---------------------------------------------------------------------------
+# Scale pop animation for scoring cells (SCOR-03)
+# Fire-and-forget — score already updated before this call
+# ---------------------------------------------------------------------------
+func _animate_score_cells(cells: Array) -> void:
+	for cell_vec in cells:  # cell_vec is Vector2i(col, row) per _collect_line convention
+		var btn: Button = cell_buttons[cell_vec.y][cell_vec.x]
+		# Reset scale first to avoid stale tween artifacts
+		btn.scale = Vector2.ONE
+		# Center the scale pivot — must be set at animation time (not _ready())
+		btn.pivot_offset = btn.size / 2.0
+		var tw := create_tween()
+		# Pop to 1.2x
+		tw.tween_property(btn, "scale", Vector2(1.2, 1.2), 0.15)\
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		# Return to 1.0x
+		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# No await — score already updated before this call
 
 # ---------------------------------------------------------------------------
 # Disable all cells (used on game over)
@@ -316,7 +465,7 @@ func _check_and_handle_no_moves() -> void:
 	while reroll_count < max_rerolls:
 		_log("No valid moves for %d — auto-rerolling..." % current_roll)
 		current_roll = randi_range(1, dice_faces)
-		_log("%s rolled a %d" % [players[current_player].name, current_roll])
+		_log("%s rolled a %d" % [players[current_player].name, current_roll], current_player)
 		_update_ui()
 		reroll_count += 1
 		# Check if any unclaimed cell matches the new roll
@@ -338,14 +487,15 @@ func _check_and_handle_no_moves() -> void:
 	_resolve_stalemate()
 
 # ---------------------------------------------------------------------------
-# Win / stalemate check (Plan 02 calls this after each claim)
+# Win / stalemate check
 # ---------------------------------------------------------------------------
 func _check_win_or_stalemate() -> bool:
 	# Win check
 	if players[current_player].score >= WIN_SCORE:
 		state = GameState.GAME_OVER
-		_log("Game over! %s wins with %d points!" % [players[current_player].name, players[current_player].score])
+		_log("Game over! %s wins with %d points!" % [players[current_player].name, players[current_player].score], current_player)
 		_disable_all_cells()
+		_show_win_overlay(current_player)
 		_update_ui()
 		return true
 	# Stalemate check — any unclaimed cell?
@@ -369,4 +519,56 @@ func _resolve_stalemate() -> void:
 			winners.append(players[i].name)
 	_log("Stalemate! Winner(s): %s with %d point(s)" % [", ".join(winners), best_score])
 	_disable_all_cells()
+	_show_stalemate_overlay(winners, best_score)
 	_update_ui()
+
+# ---------------------------------------------------------------------------
+# Win / stalemate overlay display (WIN-02)
+# ---------------------------------------------------------------------------
+func _show_win_overlay(winner_idx: int) -> void:
+	win_title_label.text = "%s Wins!" % players[winner_idx].name
+
+	# Tint the panel border with winner's color
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.15, 0.18)
+	panel_style.set_border_width_all(4)
+	panel_style.border_color = PLAYER_COLORS[winner_idx]
+	panel_style.set_corner_radius_all(10)
+	panel_style.corner_detail = 4
+	$WinOverlay/Panel.add_theme_stylebox_override("panel", panel_style)
+
+	# Build ranked scores text
+	var sorted_players := []
+	for i in player_count:
+		sorted_players.append({"name": players[i].name, "score": players[i].score})
+	sorted_players.sort_custom(func(a, b): return a.score > b.score)
+	var lines := ""
+	for p in sorted_players:
+		lines += "%s: %d pts\n" % [p.name, p.score]
+	win_scores_label.text = lines.strip_edges()
+
+	win_overlay.visible = true
+
+func _show_stalemate_overlay(winners: Array, best_score: int) -> void:
+	win_title_label.text = "Game Over!"
+
+	# Neutral styling (no winner color tint)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.15, 0.18)
+	panel_style.set_border_width_all(4)
+	panel_style.border_color = Color(0.5, 0.5, 0.5)
+	panel_style.set_corner_radius_all(10)
+	panel_style.corner_detail = 4
+	$WinOverlay/Panel.add_theme_stylebox_override("panel", panel_style)
+
+	# Build final scores with winner(s) shown first
+	var sorted_players := []
+	for i in player_count:
+		sorted_players.append({"name": players[i].name, "score": players[i].score})
+	sorted_players.sort_custom(func(a, b): return a.score > b.score)
+	var lines := "Winner(s): %s\n\n" % ", ".join(winners)
+	for p in sorted_players:
+		lines += "%s: %d pts\n" % [p.name, p.score]
+	win_scores_label.text = lines.strip_edges()
+
+	win_overlay.visible = true

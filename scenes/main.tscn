@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="PanelContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1_main")
@@ -22,28 +22,74 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 10
 
-[node name="Sidebar" type="VBoxContainer" parent="HBoxContainer"]
+[node name="Sidebar" type="PanelContainer" parent="HBoxContainer"]
 custom_minimum_size = Vector2(300, 0)
 size_flags_vertical = 3
 
-[node name="CurrentPlayerLabel" type="Label" parent="HBoxContainer/Sidebar"]
-text = "Current Player: Player 1"
+[node name="SidebarContent" type="VBoxContainer" parent="HBoxContainer/Sidebar"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
-[node name="RollResultLabel" type="Label" parent="HBoxContainer/Sidebar"]
-text = "Roll: -"
+[node name="CurrentPlayerBadge" type="PanelContainer" parent="HBoxContainer/Sidebar/SidebarContent"]
 
-[node name="RollButton" type="Button" parent="HBoxContainer/Sidebar"]
+[node name="CurrentPlayerName" type="Label" parent="HBoxContainer/Sidebar/SidebarContent/CurrentPlayerBadge"]
+text = "Player 1"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+
+[node name="RollResultLabel" type="Label" parent="HBoxContainer/Sidebar/SidebarContent"]
+text = "-"
+horizontal_alignment = 1
+
+[node name="RollButton" type="Button" parent="HBoxContainer/Sidebar/SidebarContent"]
 text = "Roll"
 
-[node name="ScoresLabel" type="Label" parent="HBoxContainer/Sidebar"]
-text = "Scores"
-autowrap_mode = 3
+[node name="ScoreStrip" type="HBoxContainer" parent="HBoxContainer/Sidebar/SidebarContent"]
+size_flags_horizontal = 3
 
-[node name="LogScroll" type="ScrollContainer" parent="HBoxContainer/Sidebar"]
+[node name="LogScroll" type="ScrollContainer" parent="HBoxContainer/Sidebar/SidebarContent"]
 size_flags_vertical = 3
+scroll_horizontal_enabled = false
 
-[node name="GameLog" type="RichTextLabel" parent="HBoxContainer/Sidebar/LogScroll"]
+[node name="GameLog" type="RichTextLabel" parent="HBoxContainer/Sidebar/SidebarContent/LogScroll"]
 size_flags_horizontal = 3
 bbcode_enabled = true
 fit_content = true
 scroll_following = true
+
+[node name="WinOverlay" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+visible = false
+
+[node name="Dimmer" type="ColorRect" parent="WinOverlay"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.65)
+
+[node name="Panel" type="PanelContainer" parent="WinOverlay"]
+anchor_left = 0.25
+anchor_top = 0.2
+anchor_right = 0.75
+anchor_bottom = 0.8
+
+[node name="VBox" type="VBoxContainer" parent="WinOverlay/Panel"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="WinOverlay/Panel/VBox"]
+text = "Player 1 Wins!"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="ScoresLabel" type="Label" parent="WinOverlay/Panel/VBox"]
+text = "Scores here"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
