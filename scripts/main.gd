@@ -407,12 +407,23 @@ func _check_score(row: int, col: int, player_idx: int) -> bool:
 		if cells.size() >= 3:
 			for cell in cells:
 				scored_grid[cell.y][cell.x] = true
-				_set_cell_spent(cell.y, cell.x)
 			players[player_idx].score += 1
 			_log_score("%s scored! Line of %d. Score: %d" % [players[player_idx].name, cells.size(), players[player_idx].score], player_idx)
-			_animate_score_cells(cells)
+			_apply_spent_appearance(cells)  # Dim cells immediately (before animation)
+			_animate_score_cells(cells)     # Tween plays over already-dimmed buttons
 			return true  # Max 1 point per turn — stop checking other directions
 	return false
+
+# ---------------------------------------------------------------------------
+# Apply dimmed spent appearance to an array of scored cells (SCOR-03)
+# Called immediately after scoring, before animation
+# ---------------------------------------------------------------------------
+func _apply_spent_appearance(cells: Array) -> void:
+	for cell_vec in cells:  # cell_vec is Vector2i(col, row) per _collect_line convention
+		var player_idx := owner_grid[cell_vec.y][cell_vec.x]
+		var base_color := PLAYER_COLORS[player_idx]
+		var spent_color := Color(base_color.r, base_color.g, base_color.b, SPENT_ALPHA)
+		_set_cell_color(cell_buttons[cell_vec.y][cell_vec.x], spent_color)
 
 # ---------------------------------------------------------------------------
 # Scale pop animation for scoring cells (SCOR-03)
