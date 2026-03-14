@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-display-and-integration/02-01-PLAN.md
-last_updated: "2026-03-14T12:55:49Z"
-last_activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, rounded tiles, HUD sidebar, win overlay
+stopped_at: Completed 02-display-and-integration/02-02-PLAN.md
+last_updated: "2026-03-14T13:01:56.897Z"
+last_activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, HUD sidebar, win overlay, score animation
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 15
 ---
 
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 15%
 *Updated after each plan completion*
 | Phase 01-foundation P03 | 5 | 2 tasks | 1 files |
 | Phase 02-display P01 | 3 | 2 tasks | 2 files |
+| Phase 02-display-and-integration P02 | 4 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,9 @@ Recent decisions affecting current work:
 - BBCode [b] bold avoided — Godot default font has no bold variant; [font_size=16] used for score emphasis [02-01]
 - Tween scale pop is fire-and-forget (no await) — score updates before animation per user decision [02-01]
 - Phase 4 Tween API concern resolved — Tween fully used in 02-01 for score cell animation [02-01]
+- [Phase 02-display-and-integration]: _apply_spent_appearance called before _animate_score_cells so dimming is instant, tween plays over dimmed state [02-02]
+- [Phase 02-display-and-integration]: win_scores_container uses dynamic Labels (one per player) with color overrides — enables per-player color coding in overlay [02-02]
+- [Phase 02-display-and-integration]: Stalemate border: single winner gets player color, tied winners get neutral white — distinguishes clear winner from draw [02-02]
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T12:55:49Z
-Stopped at: Completed 02-display-and-integration/02-01-PLAN.md
-Resume file: .planning/phases/02-display-and-integration/02-01-SUMMARY.md
+Last session: 2026-03-14T13:01:56.895Z
+Stopped at: Completed 02-display-and-integration/02-02-PLAN.md
+Resume file: None
