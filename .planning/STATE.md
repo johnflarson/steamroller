@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: "Completed 01-01-PLAN.md"
-last_updated: "2026-03-14T01:53:34Z"
-last_activity: 2026-03-14 — Executed plan 01-01; Godot project skeleton, data model, state machine
+stopped_at: "Completed 01-02-PLAN.md"
+last_updated: "2026-03-14T01:57:44Z"
+last_activity: 2026-03-14 — Executed plan 01-02; cell highlighting, claiming, turn advance, auto-reroll
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
-  percent: 5
+  total_plans: 2
+  completed_plans: 2
+  percent: 10
 ---
 
 # Project State
@@ -26,27 +26,27 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 1 of ? in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-03-14 — Plan 01-01 complete; project skeleton with state machine and board generation
+Last activity: 2026-03-14 — Plan 01-02 complete; cell highlighting, claiming, turn advance, auto-reroll
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [██░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 1 min
-- Total execution time: 0.02 hours
+- Total plans completed: 2
+- Average duration: 1.5 min
+- Total execution time: 0.05 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 1 | 1 min | 1 min |
+| 01-foundation | 2 | 3 min | 1.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (1 min)
+- Last 5 plans: 01-01 (1 min), 01-02 (2 min)
 - Trend: Establishing baseline
 
 *Updated after each plan completion*
@@ -65,6 +65,9 @@ Recent decisions affecting current work:
 - RichTextLabel built in .tscn (not in code) to avoid Godot issue #94630 with append_text [01-01]
 - rows/cols/dice_faces are configurable variables — not hardcoded constants [01-01]
 - Single main.gd script owns all game state — no autoloads for single-scene game [01-01]
+- Auto-reroll implemented as iterative while loop (not recursive) — safer stack, cap of 100 iterations [01-02]
+- Unclaimed non-matching cells disabled during WAIT_PICK to prevent misclicks [01-02]
+- Plan 03 scoring hooks left as comments in _claim_cell() at exact call sites [01-02]
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T01:53:34Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-foundation/01-02-PLAN.md (next plan: cell claiming, highlighting, turn advance)
+Last session: 2026-03-14T01:57:44Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: .planning/phases/01-foundation/01-03-PLAN.md (next plan: scoring — activate _check_score and _check_win_or_stalemate hooks)
