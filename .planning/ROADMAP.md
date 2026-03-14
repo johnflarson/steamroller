@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Godot project setup, main scene, data model, board generation, dice roll
+- [x] 01-01-PLAN.md — Godot project setup, main scene, data model, board generation, dice roll
 - [ ] 01-02-PLAN.md — Cell highlighting, claiming, turn advance, auto-reroll
 - [ ] 01-03-PLAN.md — Line detection scoring, spent-cell mechanic, win condition
 
@@ -73,7 +73,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Planning complete | - |
+| 1. Foundation | 1/3 | In progress | - |
 | 2. Display and Integration | 0/? | Not started | - |
 | 3. Setup and Game Flow | 0/? | Not started | - |
 | 4. Distribution | 0/? | Not started | - |

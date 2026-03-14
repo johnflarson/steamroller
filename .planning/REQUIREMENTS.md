@@ -9,8 +9,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Core Loop
 
-- [ ] **LOOP-01**: 10x10 grid with randomly generated cell values (1-6) at game start
-- [ ] **LOOP-02**: Player rolls d6 via Roll button
+- [x] **LOOP-01**: 10x10 grid with randomly generated cell values (1-6) at game start
+- [x] **LOOP-02**: Player rolls d6 via Roll button
 - [ ] **LOOP-03**: Valid cells (unclaimed, matching roll) highlighted after rolling
 - [ ] **LOOP-04**: Player claims a highlighted cell, which becomes owned (colored, disabled)
 - [ ] **LOOP-05**: Turn auto-advances to next player after claim
@@ -79,8 +79,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOOP-01 | Phase 1 | Pending |
-| LOOP-02 | Phase 1 | Pending |
+| LOOP-01 | Phase 1 | Complete (01-01) |
+| LOOP-02 | Phase 1 | Complete (01-01) |
 | LOOP-03 | Phase 1 | Pending |
 | LOOP-04 | Phase 1 | Pending |
 | LOOP-05 | Phase 1 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-11 after roadmap creation*
+*Last updated: 2026-03-14 after plan 01-01 execution*
