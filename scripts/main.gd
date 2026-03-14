@@ -174,7 +174,7 @@ func _init_setup_screen() -> void:
 	_style_button_neutral(count_btn_3)
 	_style_button_neutral(count_btn_4)
 
-	# Style each name input with player-colored border
+	# Style each name input with player-colored border and pre-fill with random fun names
 	for i in 4:
 		var field: LineEdit = name_inputs[i]
 		var field_style := StyleBoxFlat.new()
@@ -188,6 +188,8 @@ func _init_setup_screen() -> void:
 		field.add_theme_stylebox_override("focus", field_style)
 		field.add_theme_color_override("font_color", Color.WHITE)
 		field.add_theme_color_override("font_placeholder_color", Color(0.6, 0.6, 0.6))
+		# Pre-fill with a random fun name so players get something interesting by default
+		field.text = _random_fun_name()
 
 	# Wire Enter key chaining between fields
 	name_inputs[0].text_submitted.connect(func(_t: String): name_inputs[1].grab_focus())

@@ -153,8 +153,6 @@ size_flags_horizontal = 3
 
 [node name="NameInput0" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow0"]
 size_flags_horizontal = 3
-placeholder_text = "Player 1"
-text = "Player 1"
 max_length = 15
 
 [node name="PlayerRow1" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
@@ -162,8 +160,6 @@ size_flags_horizontal = 3
 
 [node name="NameInput1" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow1"]
 size_flags_horizontal = 3
-placeholder_text = "Player 2"
-text = "Player 2"
 max_length = 15
 
 [node name="PlayerRow2" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
@@ -172,8 +168,6 @@ visible = false
 
 [node name="NameInput2" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow2"]
 size_flags_horizontal = 3
-placeholder_text = "Player 3"
-text = "Player 3"
 max_length = 15
 
 [node name="PlayerRow3" type="HBoxContainer" parent="SetupOverlay/SetupCard/VBox/NamesContainer"]
@@ -182,8 +176,6 @@ visible = false
 
 [node name="NameInput3" type="LineEdit" parent="SetupOverlay/SetupCard/VBox/NamesContainer/PlayerRow3"]
 size_flags_horizontal = 3
-placeholder_text = "Player 4"
-text = "Player 4"
 max_length = 15
 
 [node name="StartButton" type="Button" parent="SetupOverlay/SetupCard/VBox"]
