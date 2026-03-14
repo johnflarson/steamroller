@@ -62,6 +62,7 @@ var current_roll := 0
 # Score labels for the score strip (created in _setup_score_strip)
 # ---------------------------------------------------------------------------
 var score_labels: Array = []
+var score_panels: Array = []
 
 # ---------------------------------------------------------------------------
 # @onready UI node references
@@ -71,12 +72,13 @@ var score_labels: Array = []
 @onready var current_player_name: Label = $HBoxContainer/Sidebar/SidebarContent/CurrentPlayerBadge/CurrentPlayerName
 @onready var roll_result_label: Label = $HBoxContainer/Sidebar/SidebarContent/RollResultLabel
 @onready var roll_button: Button = $HBoxContainer/Sidebar/SidebarContent/RollButton
-@onready var score_strip: HBoxContainer = $HBoxContainer/Sidebar/SidebarContent/ScoreStrip
+@onready var score_strip: HBoxContainer = $HBoxContainer/BoardPanel/ScoreStrip
 @onready var game_log: RichTextLabel = $HBoxContainer/Sidebar/SidebarContent/LogScroll/GameLog
 @onready var log_scroll: ScrollContainer = $HBoxContainer/Sidebar/SidebarContent/LogScroll
 @onready var win_overlay: Control = $WinOverlay
 @onready var win_title_label: Label = $WinOverlay/Panel/VBox/TitleLabel
 @onready var win_scores_container: VBoxContainer = $WinOverlay/Panel/VBox/ScoresContainer
+@onready var new_game_button: Button = $WinOverlay/Panel/VBox/NewGameButton
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -98,11 +100,8 @@ func _ready() -> void:
 	sidebar_style.corner_detail = 4
 	$HBoxContainer/Sidebar.add_theme_stylebox_override("panel", sidebar_style)
 
-	# Style the roll button with gold accent
-	_style_roll_button()
-
-	# Disable horizontal scrolling on log
-	log_scroll.scroll_horizontal_enabled = false
+	# Style buttons with gold accent
+	_style_button_gold(roll_button)
 
 	# Apply large font to roll result label
 	roll_result_label.add_theme_font_size_override("font_size", 48)
@@ -113,50 +112,64 @@ func _ready() -> void:
 	_setup_score_strip()
 	_update_ui()
 	roll_button.pressed.connect(_on_roll_button_pressed)
+	new_game_button.pressed.connect(_on_new_game_pressed)
+	_style_button_gold(new_game_button)
 
 # ---------------------------------------------------------------------------
 # Roll button gold styling
 # ---------------------------------------------------------------------------
-func _style_roll_button() -> void:
+func _style_button_gold(btn: Button) -> void:
 	var normal_style := StyleBoxFlat.new()
 	normal_style.bg_color = ACCENT_GOLD
 	normal_style.set_corner_radius_all(8)
 	normal_style.corner_detail = 4
-	roll_button.add_theme_stylebox_override("normal", normal_style)
+	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style := StyleBoxFlat.new()
 	hover_style.bg_color = ACCENT_GOLD.lightened(0.15)
 	hover_style.set_corner_radius_all(8)
 	hover_style.corner_detail = 4
-	roll_button.add_theme_stylebox_override("hover", hover_style)
+	btn.add_theme_stylebox_override("hover", hover_style)
 
 	var pressed_style := StyleBoxFlat.new()
 	pressed_style.bg_color = ACCENT_GOLD.darkened(0.15)
 	pressed_style.set_corner_radius_all(8)
 	pressed_style.corner_detail = 4
-	roll_button.add_theme_stylebox_override("pressed", pressed_style)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
 
 	var disabled_style := StyleBoxFlat.new()
 	disabled_style.bg_color = ACCENT_GOLD.darkened(0.5)
 	disabled_style.set_corner_radius_all(8)
 	disabled_style.corner_detail = 4
-	roll_button.add_theme_stylebox_override("disabled", disabled_style)
+	btn.add_theme_stylebox_override("disabled", disabled_style)
 
-	roll_button.add_theme_color_override("font_color", Color.BLACK)
-	roll_button.add_theme_color_override("font_color_disabled", Color(0.3, 0.3, 0.3))
+	btn.add_theme_color_override("font_color", Color.BLACK)
+	btn.add_theme_color_override("font_color_disabled", Color(0.3, 0.3, 0.3))
 
 # ---------------------------------------------------------------------------
 # Score strip setup — one label per player, created once at _ready()
 # ---------------------------------------------------------------------------
 func _setup_score_strip() -> void:
 	score_labels.clear()
+	score_panels.clear()
 	for i in player_count:
+		var panel := PanelContainer.new()
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var panel_style := StyleBoxFlat.new()
+		panel_style.bg_color = Color.TRANSPARENT
+		panel_style.set_border_width_all(2)
+		panel_style.border_color = PLAYER_COLORS[i]
+		panel_style.set_corner_radius_all(8)
+		panel_style.corner_detail = 4
+		panel_style.set_content_margin_all(6)
+		panel.add_theme_stylebox_override("panel", panel_style)
 		var lbl := Label.new()
-		lbl.add_theme_color_override("font_color", PLAYER_COLORS[i])
-		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.add_theme_color_override("font_color", Color.WHITE)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		score_strip.add_child(lbl)
+		panel.add_child(lbl)
+		score_strip.add_child(panel)
 		score_labels.append(lbl)
+		score_panels.append(panel)
 
 # ---------------------------------------------------------------------------
 # Array initialization
@@ -360,8 +373,8 @@ func _set_cell_color(btn: Button, bg: Color, border_color: Color = Color.TRANSPA
 # Spent cell visual — dimmed version of player color (scored lines)
 # ---------------------------------------------------------------------------
 func _set_cell_spent(row: int, col: int) -> void:
-	var player_idx := owner_grid[row][col]
-	var base_color := PLAYER_COLORS[player_idx]
+	var player_idx: int = owner_grid[row][col]
+	var base_color: Color = PLAYER_COLORS[player_idx]
 	var spent_color := Color(base_color.r, base_color.g, base_color.b, SPENT_ALPHA)
 	_set_cell_color(cell_buttons[row][col], spent_color)
 
@@ -411,6 +424,7 @@ func _check_score(row: int, col: int, player_idx: int) -> bool:
 			_log_score("%s scored! Line of %d. Score: %d" % [players[player_idx].name, cells.size(), players[player_idx].score], player_idx)
 			_apply_spent_appearance(cells)  # Dim cells immediately (before animation)
 			_animate_score_cells(cells)     # Tween plays over already-dimmed buttons
+			_flash_score_panel(player_idx)  # Flash the player's name bar
 			return true  # Max 1 point per turn — stop checking other directions
 	return false
 
@@ -420,8 +434,8 @@ func _check_score(row: int, col: int, player_idx: int) -> bool:
 # ---------------------------------------------------------------------------
 func _apply_spent_appearance(cells: Array) -> void:
 	for cell_vec in cells:  # cell_vec is Vector2i(col, row) per _collect_line convention
-		var player_idx := owner_grid[cell_vec.y][cell_vec.x]
-		var base_color := PLAYER_COLORS[player_idx]
+		var player_idx: int = owner_grid[cell_vec.y][cell_vec.x]
+		var base_color: Color = PLAYER_COLORS[player_idx]
 		var spent_color := Color(base_color.r, base_color.g, base_color.b, SPENT_ALPHA)
 		_set_cell_color(cell_buttons[cell_vec.y][cell_vec.x], spent_color)
 
@@ -444,6 +458,65 @@ func _animate_score_cells(cells: Array) -> void:
 		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15)\
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		# No await — score already updated before this call
+
+# ---------------------------------------------------------------------------
+# Flash the score panel when a player scores — fills with player color then fades
+# ---------------------------------------------------------------------------
+func _flash_score_panel(player_idx: int) -> void:
+	if player_idx < 0 or player_idx >= score_panels.size():
+		return
+	var panel: PanelContainer = score_panels[player_idx]
+	var color: Color = PLAYER_COLORS[player_idx]
+	# Create a filled style for the flash
+	var flash_style := StyleBoxFlat.new()
+	flash_style.bg_color = color
+	flash_style.set_border_width_all(2)
+	flash_style.border_color = color
+	flash_style.set_corner_radius_all(8)
+	flash_style.corner_detail = 4
+	flash_style.set_content_margin_all(6)
+	panel.add_theme_stylebox_override("panel", flash_style)
+	# Tween back to transparent background
+	var tw := create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(color.r, color.g, color.b, (1.0 - t) * 0.6)
+		s.set_border_width_all(2)
+		s.border_color = color
+		s.set_corner_radius_all(8)
+		s.corner_detail = 4
+		s.set_content_margin_all(6)
+		panel.add_theme_stylebox_override("panel", s)
+	, 0.0, 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+# ---------------------------------------------------------------------------
+# New game — reset all state, regenerate board, update existing buttons in place
+# ---------------------------------------------------------------------------
+func _on_new_game_pressed() -> void:
+	# Reset game state
+	current_player = 0
+	current_roll = 0
+	state = GameState.WAIT_ROLL
+	for i in player_count:
+		players[i].score = 0
+	# Reset data grids
+	for r in rows:
+		for c in cols:
+			owner_grid[r][c] = -1
+			scored_grid[r][c] = false
+	# Generate fresh board numbers and update buttons in place (no rebuild)
+	_generate_board()
+	for r in rows:
+		for c in cols:
+			var btn: Button = cell_buttons[r][c]
+			btn.text = str(board_numbers[r][c])
+			btn.disabled = false
+			btn.scale = Vector2.ONE
+			_set_cell_color(btn, NEUTRAL_CELL)
+	# Hide overlay, clear log, update UI
+	win_overlay.visible = false
+	game_log.clear()
+	_update_ui()
 
 # ---------------------------------------------------------------------------
 # Disable all cells (used on game over)
