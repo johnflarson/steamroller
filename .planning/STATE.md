@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-15T13:49:37.621Z"
+stopped_at: Completed 04-02-PLAN.md — full v1 roadmap complete
+last_updated: "2026-03-15T20:54:57.794Z"
 last_activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, HUD sidebar, win overlay, score animation
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
-  percent: 15
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-11)
 
 **Core value:** The core loop — roll, claim, score lines — must feel immediate and satisfying.
-**Current focus:** Phase 2 — Display and Integration
+**Current focus:** Phase 4 — Distribution (complete)
 
 ## Current Position
 
-Phase: 2 of 4 (Display and Integration)
-Plan: 1 of N in current phase
-Status: In progress
-Last activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, HUD sidebar, win overlay, score animation
+Phase: 4 of 4 (Distribution)
+Plan: 2 of 2 in current phase
+Status: Complete — all v1 plans done
+Last activity: 2026-03-15 — Plan 04-02 complete; Steamroller deployed to luminaldata.com, itch.io, and GitHub Releases
 
-Progress: [███░░░░░░░] 15%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [███░░░░░░░] 15%
 | Phase 02-display-and-integration P03 | 45 | 2 tasks | 7 files |
 | Phase 03-setup-and-game-flow P01 | 20 | 3 tasks | 2 files |
 | Phase 04-distribution P01 | 525671 | 2 tasks | 5 files |
+| Phase 04-distribution P02 | 60 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,7 @@ Recent decisions affecting current work:
 - [Phase 03-setup-and-game-flow]: Name fields pre-filled with random fun names at startup; empty field fallback in _on_start_game_pressed handles manual clears [03-01]
 - [Phase 04-distribution]: Game renamed from 'Dice Grid Game' to 'Steamroller'; deploy.sh uses butler + gh CLI for one-command release to Astro, itch.io, and GitHub Releases
 - [Phase 04-distribution]: Linux and Windows presets use embed_pck=true (single-file executables); ITCH_USERNAME placeholder in deploy.sh with validation gate
+- [Phase 04-distribution]: Manual Godot editor export used for all builds; butler + gh CLI deploy pipeline confirmed working end-to-end
 
 ### Pending Todos
 
@@ -110,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T13:49:37.618Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-15T20:54:57.792Z
+Stopped at: Completed 04-02-PLAN.md — full v1 roadmap complete
 Resume file: None
