@@ -66,13 +66,17 @@ Plans:
 - [ ] 03-01-PLAN.md — Setup screen UI, player count/name entry, game flow wiring, New Game reroute
 
 ### Phase 4: Distribution
-**Goal**: Distributable builds exist for HTML5 and all desktop targets, verified to run correctly on each platform
+**Goal**: Game renamed to "Steamroller", distributable builds for HTML5 and desktop (Linux, Windows), verified and deployed to luminaldata.com, itch.io, and GitHub Releases
 **Depends on**: Phase 3
 **Requirements**: EXPORT-01, EXPORT-02
 **Success Criteria** (what must be TRUE):
   1. The HTML5 export loads and plays a complete game in a browser hosted on the target platform (not just local preview)
-  2. Desktop builds for Windows, Linux, and Mac run the full game without errors
-**Plans**: TBD
+  2. Desktop builds for Windows and Linux run the full game without errors
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Rename to Steamroller, export presets, deploy script, Astro blog post
+- [ ] 04-02-PLAN.md — Manual Godot export, deploy execution, platform verification
 
 ## Progress
 
@@ -84,4 +88,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete   | 2026-03-14 |
 | 2. Display and Integration | 3/3 | Complete   | 2026-03-14 |
 | 3. Setup and Game Flow | 0/1 | Planning complete | - |
-| 4. Distribution | 0/? | Not started | - |
+| 4. Distribution | 0/2 | Planning complete | - |
