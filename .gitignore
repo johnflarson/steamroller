@@ -10,3 +10,9 @@ export/web/*.pck
 export/web/*.png
 export/web/*.ico
 export/web/*.audio.worklet.js
+
+# Linux export output
+export/linux/
+
+# Windows export output
+export/windows/
