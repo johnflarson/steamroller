@@ -77,6 +77,7 @@ var score_panels: Array = []
 @onready var score_strip: HBoxContainer = $HBoxContainer/BoardPanel/ScoreStrip
 @onready var game_log: RichTextLabel = $HBoxContainer/Sidebar/SidebarContent/LogScroll/GameLog
 @onready var log_scroll: ScrollContainer = $HBoxContainer/Sidebar/SidebarContent/LogScroll
+@onready var restart_button: Button = $HBoxContainer/Sidebar/SidebarContent/RestartButton
 @onready var win_overlay: Control = $WinOverlay
 @onready var win_title_label: Label = $WinOverlay/Panel/VBox/TitleLabel
 @onready var win_scores_container: VBoxContainer = $WinOverlay/Panel/VBox/ScoresContainer
@@ -137,6 +138,8 @@ func _ready() -> void:
 	# Wire persistent signals
 	roll_button.pressed.connect(_on_roll_button_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
+	restart_button.pressed.connect(_on_new_game_pressed)
+	_style_button_gold(restart_button)
 	_style_button_gold(new_game_button)
 
 	# Hide game UI at startup — setup screen will be shown instead
