@@ -43,8 +43,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Export
 
-- [ ] **EXPORT-01**: HTML5 web export
-- [ ] **EXPORT-02**: Desktop export (Windows/Linux/Mac)
+- [x] **EXPORT-01**: HTML5 web export
+- [x] **EXPORT-02**: Desktop export (Windows/Linux/Mac)
 
 ## v2 Requirements
 
@@ -98,8 +98,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SETUP-01 | Phase 3 | Complete |
 | SETUP-02 | Phase 3 | Complete |
 | WIN-03 | Phase 3 | Complete |
-| EXPORT-01 | Phase 4 | Pending |
-| EXPORT-02 | Phase 4 | Pending |
+| EXPORT-01 | Phase 4 | Complete |
+| EXPORT-02 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total

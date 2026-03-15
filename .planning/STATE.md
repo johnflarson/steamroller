@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-15T03:36:21.336Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-15T13:49:37.621Z"
 last_activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, HUD sidebar, win overlay, score animation
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
   percent: 15
 ---
 
@@ -56,6 +56,7 @@ Progress: [███░░░░░░░] 15%
 | Phase 02-display-and-integration P02 | 4 | 2 tasks | 2 files |
 | Phase 02-display-and-integration P03 | 45 | 2 tasks | 7 files |
 | Phase 03-setup-and-game-flow P01 | 20 | 3 tasks | 2 files |
+| Phase 04-distribution P01 | 525671 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 02-display-and-integration]: New Game resets state in place (no scene reload) — reuses existing 100 cell buttons [02-03]
 - [Phase 03-setup-and-game-flow]: Setup screen initialized once at _ready() — _fade_to_setup() shows it without re-init, preserving LineEdit text and ButtonGroup state between games [03-01]
 - [Phase 03-setup-and-game-flow]: Name fields pre-filled with random fun names at startup; empty field fallback in _on_start_game_pressed handles manual clears [03-01]
+- [Phase 04-distribution]: Game renamed from 'Dice Grid Game' to 'Steamroller'; deploy.sh uses butler + gh CLI for one-command release to Astro, itch.io, and GitHub Releases
+- [Phase 04-distribution]: Linux and Windows presets use embed_pck=true (single-file executables); ITCH_USERNAME placeholder in deploy.sh with validation gate
 
 ### Pending Todos
 
@@ -107,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T03:36:21.325Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-distribution/04-CONTEXT.md
+Last session: 2026-03-15T13:49:37.618Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

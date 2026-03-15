@@ -72,7 +72,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The HTML5 export loads and plays a complete game in a browser hosted on the target platform (not just local preview)
   2. Desktop builds for Windows and Linux run the full game without errors
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 04-01-PLAN.md — Rename to Steamroller, export presets, deploy script, Astro blog post
@@ -88,4 +88,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete   | 2026-03-14 |
 | 2. Display and Integration | 3/3 | Complete   | 2026-03-14 |
 | 3. Setup and Game Flow | 0/1 | Planning complete | - |
-| 4. Distribution | 0/2 | Planning complete | - |
+| 4. Distribution | 1/2 | In Progress|  |
