@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-02-PLAN.md — full v1 roadmap complete
-last_updated: "2026-03-15T20:54:57.794Z"
-last_activity: 2026-03-14 — Plan 02-01 complete; dark theme, muted colors, HUD sidebar, win overlay, score animation
+status: completed
+stopped_at: Completed 04-03-PLAN.md — export preset gap closure complete
+last_updated: "2026-03-15T21:10:26.014Z"
+last_activity: 2026-03-15 — Plan 04-02 complete; Steamroller deployed to luminaldata.com, itch.io, and GitHub Releases
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 10
+  completed_plans: 10
   percent: 100
 ---
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100%
 | Phase 03-setup-and-game-flow P01 | 20 | 3 tasks | 2 files |
 | Phase 04-distribution P01 | 525671 | 2 tasks | 5 files |
 | Phase 04-distribution P02 | 60 | 3 tasks | 4 files |
+| Phase 04-distribution P03 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 04-distribution]: Game renamed from 'Dice Grid Game' to 'Steamroller'; deploy.sh uses butler + gh CLI for one-command release to Astro, itch.io, and GitHub Releases
 - [Phase 04-distribution]: Linux and Windows presets use embed_pck=true (single-file executables); ITCH_USERNAME placeholder in deploy.sh with validation gate
 - [Phase 04-distribution]: Manual Godot editor export used for all builds; butler + gh CLI deploy pipeline confirmed working end-to-end
+- [Phase 04-distribution]: embed_pck=true on Linux and Windows presets ensures single-file executables; deploy.sh zip commands packaging only the binary are correct as-is
+- [Phase 04-distribution]: ITCH_USERNAME TODO comment removed — value was already correctly set to 'johnfredone'
 
 ### Pending Todos
 
@@ -112,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T20:54:57.792Z
-Stopped at: Completed 04-02-PLAN.md — full v1 roadmap complete
+Last session: 2026-03-15T21:10:26.012Z
+Stopped at: Completed 04-03-PLAN.md — export preset gap closure complete
 Resume file: None
