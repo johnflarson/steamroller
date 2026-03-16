@@ -1,299 +1,242 @@
-# Domain Pitfalls
+# Pitfalls Research
 
-**Domain:** Godot 4 turn-based board game with HTML5 + desktop export
-**Project:** Dice Grid Game (10x10, 2-4 players, GDScript, Control nodes)
-**Researched:** 2026-03-11
-**Confidence note:** Based on training knowledge of Godot 4 (through ~August 2025). Web and official doc access was unavailable during this research run. Flag as MEDIUM confidence; verify HTML5-specific claims against current Godot docs before the export phase.
+**Domain:** Adding dice sprite animation to an existing Godot 4 Control-node UI game (HTML5 + desktop)
+**Project:** Steamroller v1.1 — Dice Polish milestone
+**Researched:** 2026-03-15
+**Confidence:** MEDIUM — Godot 4 forum threads and GitHub issues verified; some behavior nuances are version-dependent. Flag for validation against current Godot 4.x docs before implementation.
+
+---
+
+## Scope Note
+
+This file covers pitfalls specific to the v1.1 work: adding a fake-3D tumbling dice animation and prominent roll button to the existing single-file Control-node game. The v1.0 pitfalls (state machine, line detection, HTML5 SharedArrayBuffer, etc.) are documented in the v1.0 milestone research and are assumed solved. Pitfalls below are integration-focused: what breaks when you add animation to an already-working Control-node game.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites or major debugging sessions.
+Mistakes that require rewrites or produce broken behavior on HTML5.
 
 ---
 
-### Pitfall 1: State Machine Bypasses via Direct Signal Wiring
+### Pitfall 1: Using AnimatedSprite2D as a Direct Child of a Control Node
 
-**What goes wrong:** Cell buttons are wired directly to a function that both rolls the die and claims the cell. As the game grows, signals from the grid bleed into the wrong phase (e.g., a cell click is processed while still in WAIT_ROLL), producing ghost moves, double-claims, or score miscalculations that are hard to reproduce.
+**What goes wrong:** A developer adds `AnimatedSprite2D` as a child of a `CenterContainer` or other Control node. The sprite renders but ignores the Control layout system entirely. It positions using its own `position` property (world-space offset from parent origin), not Control anchors. At different browser window sizes the dice drifts off-center. The animation plays correctly in the editor at 1920x1080 and fails visually at every other resolution.
 
-**Why it happens:** Godot's signal system makes it tempting to connect `button_pressed` directly to game logic. Without a gating state machine, every signal fires regardless of game phase.
+**Why it happens:** `AnimatedSprite2D` is a `Node2D`, not a `Control`. Node2D children of Control nodes are not subject to anchors, size flags, or container layout — they float at a 2D world position. The hierarchy looks correct in the scene tree but the layout contract is broken.
 
-**Consequences:** Race conditions between UI events and game state. Especially nasty because it works fine in simple linear testing but breaks when players click quickly or when auto-reroll triggers during a pick phase.
+**How to avoid:** Use `TextureRect` (a Control node) as the visible dice display, animated via `AnimationPlayer` changing the `texture` or `region_rect` property each frame. This keeps everything in the Control layout tree and respects anchors and resizing. Alternatively, wrap the `AnimatedSprite2D` in a `SubViewportContainer` — but this adds significant complexity (see Pitfall 2).
 
-**Prevention:**
-- Implement the WAIT_ROLL / WAIT_PICK two-phase state machine as a single enum + match block before wiring any signals.
-- All cell buttons emit a generic `cell_selected(x, y)` signal. The game controller's handler ignores it unless `current_phase == WAIT_PICK`.
-- Disable all cell buttons programmatically when entering WAIT_ROLL. Enable only valid-move cells when entering WAIT_PICK.
+The recommended approach for this project: a single `TextureRect` inside a `CenterContainer`, with an `AnimationPlayer` that steps through frame regions on a spritesheet using `AtlasTexture` or by swapping individual frame textures. This is pure Control-node territory and scales correctly.
 
-**Detection:**
-- Players can claim cells without rolling first.
-- Score jumps by more than 1 in a single turn.
-- Auto-reroll triggers mid-pick.
+**Warning signs:**
+- Dice is perfectly centered in the editor but off-center in the exported HTML5 build.
+- Sprite position does not respond to `SIZE_EXPAND_FILL` or anchor changes.
+- `get_rect()` returns zero size on the parent container.
 
-**Phase:** Address in Phase 1 (core game loop scaffolding) before any UI wiring.
+**Phase to address:** Phase 1 (dice animation node setup). Choose TextureRect + AnimationPlayer before writing any animation code.
 
 ---
 
-### Pitfall 2: Line Detection Off-by-One in Diagonal Directions
+### Pitfall 2: SubViewport Workaround Adds Broken Input Passthrough
 
-**What goes wrong:** The scoring logic checks 4 directions (horizontal, vertical, two diagonals) from the placed cell, but iterates `range(-2, 3)` or similar without correctly handling the "count the placed cell itself once" requirement. Results in lines of 2 reporting as 3, or genuine lines of 3 being missed at board edges.
+**What goes wrong:** Some tutorials suggest embedding a `Node2D`-based animated sprite inside a `SubViewportContainer` to get it into the Control layer. This works visually but breaks input: click events on overlapping Control nodes (including the roll button itself) may not reach their targets because the SubViewport intercepts them. On HTML5, pointer event routing through SubViewports has additional quirks.
 
-**Why it happens:** The standard approach — walk in both directions from the placed cell, count owned cells, sum — is easy to mis-implement. A common mistake is counting the origin cell twice (once per direction walk) or using separate pass/fail logic per direction without a unified counter.
+**Why it happens:** A `SubViewportContainer` with `stretch=true` captures input events for its viewport by default. Transparent areas of the SubViewport still consume click events.
 
-**Consequences:** Scores are wrong. Players notice immediately. Hard to debug because it only manifests for specific board positions.
+**How to avoid:** Do not use SubViewport for this feature. The dice animation is purely decorative — it requires no physics, no 2D spatial logic, and no input of its own. A `TextureRect` + `AnimationPlayer` approach achieves the same visual result with zero SubViewport complexity. The SubViewport approach is appropriate when you need a full 2D world rendered into a UI surface; a frame-flipping dice does not qualify.
 
-**Prevention:**
-- Use a single function `count_line(x, y, dx, dy) -> int` that walks in +direction and -direction from the origin, counting consecutive owned cells belonging to the current player, then returns `positive_run + negative_run + 1` (the placed cell).
-- Call this for all four direction pairs: (1,0), (0,1), (1,1), (1,-1).
-- Score if any direction returns >= 3.
-- Unit test the function with known board states before integrating into the turn loop.
+**Warning signs:**
+- Roll button stops responding to clicks after adding dice animation.
+- Mouse events reach the button only when clicking outside the dice display area.
+- Input passthrough works in editor but fails in HTML5.
 
-**Detection:**
-- Place three cells in a known diagonal line — no point awarded.
-- Two cells adjacent — point incorrectly awarded.
-- Cells at row 0 or column 0 behave differently from interior cells.
-
-**Phase:** Address in Phase 1 (scoring logic). Write tests immediately.
+**Phase to address:** Phase 1 (architecture decision). Discard SubViewport approach at design time, not after implementation.
 
 ---
 
-### Pitfall 3: GridContainer Cell Count Mismatch Causing Silent Layout Corruption
+### Pitfall 3: Looping Animation Never Emits `animation_finished`
 
-**What goes wrong:** A `GridContainer` with `columns = 10` is populated by adding child buttons in a loop. If the loop adds 99 or 101 buttons (off-by-one in a nested loop), the grid silently renders wrong — last row has 9 cells, or an extra cell appears. The bug is invisible at a glance.
+**What goes wrong:** The tumbling dice animation is set to loop so it spins continuously while the player has not yet rolled. The developer connects `animation_finished` to advance game state. The signal is never emitted — looping animations do not emit `animation_finished` in Godot 4. The game state never advances. On first play, the roll button appears broken.
 
-**Why it happens:** Nested loop `for y in range(10): for x in range(10)` is correct, but copy-paste errors, range typos (`range(1, 11)` vs `range(10)`), or a stray `break` introduce the off-by-one. GridContainer does not warn when it receives a non-multiple-of-columns count.
+**Why it happens:** In Godot 4, `AnimationPlayer` only emits `animation_finished` (or `AnimatedSprite2D.animation_finished`) when a **non-looping** animation reaches its final frame. A looping animation has no final frame by definition. This is correct behavior but trips up developers coming from other engines or who conflate "tumble loop" with "tumble-then-land" in a single animation.
 
-**Consequences:** Board positions are misaligned from `board_numbers[y][x]`. Cell at visual position (9,0) maps to data position (8,9). Scoring and claiming operate on the wrong cell data.
+**How to avoid:** Split the dice animation into two named states:
+1. `"tumble"` — a looping spin animation played while waiting for roll input.
+2. `"land"` — a non-looping animation that plays after the roll value is determined, ends on the correct face frame. Connect `animation_finished` on this animation only to advance game state.
 
-**Prevention:**
-- After populating, assert `grid_container.get_child_count() == 100` with a hard crash in debug builds (`assert(grid_container.get_child_count() == 100, "Board cell count mismatch")`).
-- Store each cell button reference in a `cells[y][x]` 2D array at creation time. Use that array — never `get_child(y * 10 + x)` — to access cells by coordinate.
+Call `play("land")` when the roll value is known; call `play("tumble")` on loop at all other times. The `animation_finished` signal fires reliably because only `"land"` is non-looping.
 
-**Detection:**
-- Visual inspection: last row looks short or has an extra cell.
-- Claiming cell (9,9) highlights a different cell than expected.
+**Warning signs:**
+- `animation_finished` never fires after connecting it.
+- Game state advances immediately (frame 0) instead of after the animation.
+- Connecting `animation_finished` causes a call on every loop iteration in some Godot versions — verify behavior in target version.
 
-**Phase:** Address in Phase 1 (board setup). The assertion catches it immediately.
-
----
-
-### Pitfall 4: HTML5 Export Broken by SharedArrayBuffer / Thread Requirements
-
-**What goes wrong:** Godot 4's default HTML5 export template requires `SharedArrayBuffer`, which browsers only provide when the page is served with specific CORS headers (`Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`). Without these headers, the game either fails silently or shows a black screen. GitHub Pages and many simple static hosts do not set these headers by default.
-
-**Why it happens:** Godot 4's web export uses threads internally. The threading APIs require `SharedArrayBuffer`, which browsers gate behind these security headers post-Spectre.
-
-**Consequences:** Game works perfectly in the Godot editor's web export preview but fails on the actual hosting platform. Discovered late if web testing isn't done early.
-
-**Prevention:**
-- Use the **single-threaded** web export template (`Export > Web > Threads: disabled`). This is available in Godot 4.x and removes the `SharedArrayBuffer` requirement.
-- Alternatively, configure the hosting server to emit the required headers. For GitHub Pages, this requires a custom `_headers` file (Netlify) or a Service Worker hack — messy.
-- Test the HTML5 build on the actual hosting platform in Phase 1 or early Phase 2, not at the end.
-
-**Detection:**
-- Black screen or console error `SharedArrayBuffer is not defined` when opening the hosted build.
-- Works in `godot --export-debug` local server but not on host.
-
-**Phase:** Address in Phase 2 (first HTML5 export attempt). Configure single-threaded template from the start.
+**Phase to address:** Phase 1 (animation design). Name and structure animation clips correctly before wiring state machine signals.
 
 ---
 
-### Pitfall 5: Parallel Data Arrays Desyncing (`board_numbers` vs `owner`)
+### Pitfall 4: `await animation_finished` Leaving Game State Suspended on Fast Input
 
-**What goes wrong:** The game uses two parallel 2D arrays: `board_numbers[y][x]` (1-6) and `owner[y][x]` (-1 or player index). Anywhere the arrays are initialized, reset, or resized independently, they can go out of sync. A reset-on-new-game that clears `owner` but regenerates `board_numbers` in a different loop order leaves stale state.
+**What goes wrong:** The roll button handler uses `await animation_player.animation_finished` to pause until the dice lands. A player (or tester) presses the roll button, then immediately clicks a cell before the animation completes. The cell click is processed because `WAIT_PICK` was set (or not set correctly) while the coroutine was suspended. The turn advances with no animation completion, or the animation finishes after a cell is claimed and the `animation_finished` handler runs on a stale state.
 
-**Why it happens:** Two mutable arrays tracking the same conceptual object (a cell) is a classic data coherence problem. Every operation that touches one must touch both.
+**Why it happens:** GDScript `await` creates a coroutine. The function returns immediately on the first `await`, and the caller (the signal handler) has completed. Any other signal connected while the coroutine is sleeping can fire and mutate game state. This is a concurrency issue in cooperative multitasking.
 
-**Consequences:** Claimed cells appear available. Cells show the wrong number. Line detection scores on cleared cells.
+**How to avoid:** Do not rely solely on `await` for state gating. The state machine is the source of truth. Pattern:
+1. On roll button pressed: set state to `ANIMATING` (a new state between `WAIT_ROLL` and `WAIT_PICK`).
+2. In the `ANIMATING` state, disable the roll button and disable all cell buttons.
+3. Play the land animation.
+4. Connect `animation_finished` to a handler (not via `await`) that sets state to `WAIT_PICK` and enables valid cells.
 
-**Prevention:**
-- Encapsulate both arrays behind a single `BoardData` class (a `RefCounted` or inner class). Expose only `get_cell_number(x, y)`, `get_owner(x, y)`, `claim_cell(x, y, player)`, `reset()`. Never access the raw arrays outside this class.
-- `reset()` initializes both arrays atomically in one pass.
+This way, button clicks during the animation cannot reach active handlers because no handlers respond in the `ANIMATING` state. The existing state machine pattern (already validated in v1.0) extends naturally.
 
-**Detection:**
-- After starting a new game, some cells appear pre-claimed.
-- Clicking a visually empty cell has no effect (it's still marked claimed from the previous game).
+**Warning signs:**
+- Cells can be claimed before the dice finishes landing.
+- Second roll starts while first animation is still playing.
+- Game log shows claim events with roll value from a previous turn.
 
-**Phase:** Address in Phase 1 (data model design). Encapsulate before writing any game logic.
-
----
-
-## Moderate Pitfalls
-
----
-
-### Pitfall 6: Auto-Reroll Infinite Loop
-
-**What goes wrong:** The auto-reroll requirement (reroll when no valid moves exist for the current roll) is implemented as a recursive call or a `while` loop. If the board is nearly full and no number has unclaimed cells, the loop spins indefinitely, hanging the game.
-
-**Why it happens:** Developers test auto-reroll with a mostly empty board where it quickly resolves. The edge case — board almost full — is not considered.
-
-**Prevention:**
-- Before rerolling, check if ANY unclaimed cell exists. If none, the game should end or declare a special outcome rather than rerolling.
-- The "first to 5 points wins" condition means the game usually ends before the board fills, but add the check regardless.
-- Limit reroll attempts to a max of 6 (one per die face) and if all faces have no valid cells, trigger end-of-game.
-
-**Detection:**
-- Game freezes when the board is nearly full.
-- Editor shows high CPU usage with no visible activity.
-
-**Phase:** Address in Phase 1 (turn flow logic).
+**Phase to address:** Phase 1 (state machine extension). Add the `ANIMATING` state as the first code change before touching any animation nodes.
 
 ---
 
-### Pitfall 7: Valid Move Highlighting Left Active After Turn Ends
+### Pitfall 5: VRAM Texture Compression Breaks Sprites in Web Export
 
-**What goes wrong:** After a player claims a cell, the highlight state (color/border indicating valid moves) is not cleared before the next player's WAIT_ROLL phase. The next player sees highlighted cells that match the previous player's roll.
+**What goes wrong:** The dice spritesheet PNG is imported with VRAM compression enabled (Godot's default for many texture types). In the editor and desktop export the sprites look correct. In the HTML5 export they render as solid black rectangles or are completely invisible. This is a documented Godot 4 bug affecting VRAM-compressed textures in WebGL2.
 
-**Why it happens:** Highlighting is applied to cell buttons on entering WAIT_PICK. Developers remember to highlight on entry but forget to clear on exit (claiming or rerolling).
+**Why it happens:** Godot 4's VRAM compression formats (S3TC/DXT, BPTC/BC7) require GPU extensions that WebGL2 does not guarantee. When the browser does not have the extension and the texture was pre-compressed for VRAM, Godot cannot decompress it at runtime in the browser, resulting in black textures. This is a confirmed issue tracked in godotengine/godot#95721.
 
-**Prevention:**
-- Create a dedicated `clear_highlights()` function called at the start of `_enter_wait_roll()` and after any cell claim.
-- The state machine's `_exit_wait_pick()` always calls `clear_highlights()`.
+**How to avoid:** When importing the dice spritesheet, explicitly set the compression mode to `Lossless` (PNG) or `Lossy` (WebP). Do **not** use `VRAM Compressed`. For a small dice spritesheet (a few hundred pixels square), lossless is fine and the file size difference is negligible. Set this on import before the first web export test — changing it later requires re-exporting.
 
-**Detection:**
-- After claiming a cell, some cell buttons retain a highlight color.
-- Two consecutive players see the same highlighted cells.
+**Warning signs:**
+- Dice sprite appears as black rectangle in browser, works fine in desktop build.
+- No JS console errors — the texture loads, it just renders black.
+- Issue only manifests in the HTML5 export, not in the editor's "Run in Browser" preview served locally.
 
-**Phase:** Address in Phase 1 (UI state management).
-
----
-
-### Pitfall 8: Player Color Collision with Cell Number Text
-
-**What goes wrong:** Player colors are chosen that work well against a neutral background but become illegible when used as a cell background color with dark text showing the cell number (1-6). E.g., a dark blue player color with dark text makes the number unreadable.
-
-**Why it happens:** Colors are picked for board appearance (bright, distinct) without considering text contrast on that background.
-
-**Prevention:**
-- Choose player colors from a palette with known good contrast against white or light text: e.g., a medium-dark red, medium-dark blue, dark green, medium purple. Test all 4 against both white and dark text.
-- Use white text on all claimed cells (`label.add_theme_color_override("font_color", Color.WHITE)`).
-- Pre-validate the 4 player colors in the project before building the UI.
-
-**Detection:**
-- Cell number is hard to read after claiming.
-- Colors look fine in the color picker but not on the actual button.
-
-**Phase:** Address in Phase 1 (visual design, before building the cell button scene).
+**Phase to address:** Phase 1 (texture import configuration). Set import settings when adding the spritesheet asset, before any HTML5 test.
 
 ---
 
-### Pitfall 9: Turn Order Skipping in Player Array Logic
+### Pitfall 6: Button-to-Dice Transition Using `hide()`/`show()` Causes Layout Reflow Flash
 
-**What goes wrong:** Advancing to the next player uses `current_player = (current_player + 1) % player_count`. This works for 2 and 4 players but is incorrect for 3 players when the `players` array size changes mid-game (it shouldn't, but if `player_count` is read from the wrong variable, it produces index errors or skipped turns).
+**What goes wrong:** The roll button is hidden with `button.hide()` and the dice `TextureRect` is shown with `dice_rect.show()` in the same frame. On HTML5, this can cause a one-frame layout reflow visible as a flash or jump, because Control nodes that change visibility force a container layout recalculation. On slower browsers (mobile, low-end hardware) this is a full-frame stutter.
 
-**Why it happens:** Two sources of truth: `players.size()` and a separate `player_count` variable. If they ever diverge, the modulo uses the wrong value.
+**Why it happens:** `hide()` removes the node from layout flow (equivalent to CSS `display: none`). The container reflows without the button, repositioning other elements, then reflows again with the dice rect. Two layout passes in one frame.
 
-**Prevention:**
-- Derive player count exclusively from `players.size()`. Delete any separate `player_count` variable.
-- `current_player = (current_player + 1) % players.size()`.
+**How to avoid:** Use `modulate.a = 0.0` (fully transparent) instead of `hide()` to make elements invisible while keeping them in layout flow. Or use `visible = false` only for elements that genuinely should not occupy space (dice rect before the first roll). Better yet, lay out the button and dice rect in the same `CenterContainer` position, overlapping, and toggle visibility using `modulate` so layout never changes — only compositing does.
 
-**Detection:**
-- 3-player game skips Player 2 entirely after Player 1.
-- Array index out of bounds error in the console when accessing `players[current_player]`.
+**Warning signs:**
+- Roll button disappearing causes other UI elements to shift briefly.
+- Dice appears in a slightly different position than the button was.
+- Transition looks fine in the editor at 60fps but flashes on the web build.
 
-**Phase:** Address in Phase 1 (player setup).
-
----
-
-### Pitfall 10: Game Log Growing Without Bounds
-
-**What goes wrong:** The game log (`RichTextLabel` or similar in a `ScrollContainer`) accumulates every roll, claim, and score event for the entire game. For a long game this is fine, but if the log is naively rebuilt (cleared and repopulated) on every update, it causes noticeable UI stutter. If not cleared between games, the second game's log contains the first game's history.
-
-**Why it happens:** Appending to a `RichTextLabel` is easy but reset logic is often omitted or called at the wrong time.
-
-**Prevention:**
-- Use `RichTextLabel.append_text()` to add entries incrementally. Never rebuild the full log.
-- Call `RichTextLabel.clear()` in the new-game initialization path, explicitly.
-- Limit visible log entries to the last N (e.g., 20) if performance becomes a concern — but for this game scope it likely won't.
-
-**Detection:**
-- Starting a new game still shows the previous game's events.
-- Log scrolls many pages for a long game.
-
-**Phase:** Address in Phase 2 (game log implementation).
+**Phase to address:** Phase 2 (button-to-dice transition implementation). Test transition on actual HTML5 export immediately after building it.
 
 ---
 
-### Pitfall 11: GridContainer Not Scaling Correctly at Different Viewport Sizes
+## Technical Debt Patterns
 
-**What goes wrong:** A `GridContainer` with fixed pixel sizes for cell buttons looks correct at 1080p but overflows its container at 768p (common on smaller laptop screens or constrained browser windows). Because Control nodes use pixel-based sizing by default, the grid either clips or forces a scrollbar.
+Shortcuts that seem reasonable but create long-term problems.
 
-**Why it happens:** Cell button sizes are hardcoded (e.g., `custom_minimum_size = Vector2(50, 50)`) without considering that the container might be smaller than `10 * 50 = 500px`.
-
-**Prevention:**
-- Use a `GridContainer` inside a `AspectRatioContainer` or constrain it to a percentage of the viewport via anchors.
-- Use `custom_minimum_size` only as a floor, not a fixed size. Let the grid fill available space.
-- Alternatively, compute cell size dynamically: `cell_size = floor(grid_container.size.x / 10)` and apply it at `_ready()` and on `resized` signal.
-- Test at 1280x720 and 1920x1080 minimum.
-
-**Detection:**
-- At smaller window sizes, cells are cut off or a scrollbar appears on the board.
-- Browser window resize causes visual artifacts.
-
-**Phase:** Address in Phase 2 (layout and responsiveness). Design for it in Phase 1.
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Hard-code animation duration in a timer instead of connecting `animation_finished` | Quick workaround for signal issues | Breaks silently if animation FPS is changed; timing drifts on slow hardware | Never — use the signal |
+| Use `AnimatedSprite2D` as Node2D child of Control | Familiar API, easy to set up | Layout breaks at all non-development resolutions | Never for this project |
+| Single animation clip with "land on 6" hard-coded, swap frames in code | Avoids creating 6 animation variants | Any animation change requires both asset and code changes | Only for rapid prototype; remove before shipping |
+| Skip the `ANIMATING` state, use `await` + boolean flag | Fewer states to manage | Coroutine suspension allows race conditions on fast input | Never — state machine already exists, extend it |
+| Import spritesheet with default VRAM compression | Zero extra steps | Black texture on every HTML5 test | Never — set compression on first import |
 
 ---
 
-## Minor Pitfalls
+## Integration Gotchas
+
+Common mistakes when connecting animation to the existing v1.0 system.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| State machine extension | Adding animation logic inside the existing `WAIT_ROLL` handler | Add a new `ANIMATING` state; keep states single-purpose |
+| Auto-reroll mechanic | Playing land animation with auto-reroll value, then immediately triggering another reroll before animation ends | Auto-reroll must wait until current land animation finishes; `ANIMATING` state blocks it |
+| Roll button layout | Moving roll button from HUD sidebar to center without updating all layout references in main.gd | Audit all node path references (`$HUD/RollButton` style paths) before moving the button in the scene tree |
+| AnimationPlayer node path | Referencing animation player with hard-coded path that breaks when scene structure changes | Use `@onready var _dice_anim: AnimationPlayer = $DiceArea/AnimationPlayer` with explicit type annotation (required for HTML5 export — see v1.0 lesson) |
+| Spritesheet frame count | Spritesheet has 24 frames but AnimationPlayer track uses 20 — extra frames show garbage data | Verify frame count in both the texture import settings and the AnimationPlayer track before testing |
 
 ---
 
-### Pitfall 12: Forgetting `queue_free()` on Orphaned Nodes Between Games
+## Performance Traps
 
-**What goes wrong:** If cells are dynamically instantiated (not static scene children), starting a new game that re-instantiates cells without freeing the old ones causes duplicate nodes. The old cells remain in the scene tree, invisible but active, consuming memory and potentially receiving signals.
-
-**Prevention:**
-- If cells are dynamic: call `grid_container.queue_free_children()` (or loop `for child in grid_container.get_children(): child.queue_free()`) before regenerating.
-- Prefer a static scene where the 100 cells exist as permanent children and are only reset, not recreated.
-
-**Phase:** Address in Phase 1 (cell instantiation strategy decision).
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Large uncompressed spritesheet in HTML5 | Initial page load stalls 3-5 seconds; animation pop-in on first play | Keep spritesheet under 512x512 for a simple 6-face dice; use lossless WebP if size is a concern | Any spritesheet over ~1MB uncompressed |
+| Per-frame texture swapping from separate PNG files | Framerate drop during animation on mobile browsers | Use a single spritesheet with `AtlasTexture` region updates — one draw call, one texture bind | 12+ frames as individual textures |
+| AnimationPlayer with many keyframes on a Control node tree | Main thread stall during scene load on web | Keep animation clips short (< 1 second, < 30 keyframes); bake complex animations into spritesheet frames | Not a concern for a simple dice animation — note only if scope creeps |
 
 ---
 
-### Pitfall 13: `randi() % 6` Produces Biased Results
+## UX Pitfalls
 
-**What goes wrong:** `randi() % 6` does not produce a perfectly uniform distribution if `RAND_MAX` is not a multiple of 6 (which it isn't). In practice for a d6, the bias is negligible (< 0.001%), but `randi_range(1, 6)` is the idiomatic Godot 4 function and avoids any concern.
-
-**Prevention:**
-- Use `randi_range(1, 6)` for all die rolls and board initialization.
-
-**Phase:** Address in Phase 1 (any randomization code).
-
----
-
-### Pitfall 14: Input Event Handling on Disabled Buttons
-
-**What goes wrong:** Setting `button.disabled = true` prevents normal press events, but mouse-over and focus events still fire. If hover styling is applied via signals (not theme overrides), disabled cells may show hover highlights, confusing players about which cells are valid.
-
-**Prevention:**
-- Use `mouse_filter = Control.MOUSE_FILTER_IGNORE` on disabled cells if hover behavior is completely unwanted.
-- Or rely entirely on Godot's built-in disabled state + theme styling (`disabled` StyleBox in the theme) rather than signal-based hover logic.
-
-**Phase:** Address in Phase 2 (UI polish).
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Animation plays but game state doesn't obviously change after it | Players don't know when to click a cell | Flash or highlight valid cells immediately when land animation ends — use `animation_finished` handler to trigger existing highlight logic |
+| Auto-reroll plays the land animation, pauses, then immediately replays it | Confusing — looks like a bug | On auto-reroll, display a brief "No moves! Re-rolling..." message (already in game log) and skip the land animation, or play it immediately without pause |
+| Roll button disappears during animation with no replacement indicator | Players lose sense of what to do next | During `ANIMATING` state, show the dice display in place of the button — the spinning dice IS the feedback, no gap |
+| Landing animation always ends on face 6 regardless of roll value | Players notice the dice never matches their roll value | Ensure the land animation targets the correct face for each of the 6 roll values — parameterize by roll result |
 
 ---
 
-## Phase-Specific Warnings
+## "Looks Done But Isn't" Checklist
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Board data setup | Parallel array desync (#5) | Encapsulate in a BoardData class from day one |
-| Scoring logic | Off-by-one in diagonal line detection (#2) | Write and test `count_line()` in isolation before integrating |
-| State machine wiring | Signal bypass (#1) | Build state enum before wiring any button signals |
-| Turn loop | Auto-reroll infinite loop (#6) | Add "any unclaimed cells exist?" guard before reroll logic |
-| GridContainer population | Cell count mismatch (#3) | Assert child count == 100 after population |
-| First HTML5 build | SharedArrayBuffer failure (#4) | Use single-threaded export template; test on real host early |
-| UI scaling | Grid overflow at small viewports (#11) | Anchor grid to viewport percentage; test at 1280x720 |
-| New game flow | Orphaned nodes (#12), stale log (#10) | Explicit reset/free paths for all persistent UI |
+Things that appear complete in the editor but have missing pieces.
+
+- [ ] **Dice centers correctly:** Test in HTML5 at 1280x720, 1920x1080, and a narrow browser window. Centering in the editor does not guarantee centering on web.
+- [ ] **All 6 faces work:** Manually trigger each roll value (1-6) and verify the land animation ends on the correct face. Easy to test only face 6 during development.
+- [ ] **Auto-reroll doesn't break animation:** Force an auto-reroll scenario (manually claim all cells of one value) and verify the animation sequence is sensible and does not double-play.
+- [ ] **Texture compression set correctly:** Check the spritesheet `.import` file — confirm `compress/mode` is NOT `3` (VRAM Compressed). Should be `0` (Lossless) or `1` (Lossy).
+- [ ] **Explicit type annotation on all new `@onready` vars:** Every new node reference added for v1.1 must use explicit typing (`var _dice: TextureRect`, not `var _dice := $Dice`). The v1.0 export proved `:=` inference breaks HTML5.
+- [ ] **`ANIMATING` state blocks cell clicks:** During dice animation, click every cell on the board and confirm nothing is claimed.
+- [ ] **Roll button re-enabled after animation:** After the land animation ends and valid cells are highlighted, confirm the HUD state is correct and the roll button will re-appear on the next turn.
+- [ ] **Win condition during animation:** Win a game such that the last claim happens while dice animation would normally be playing — confirm win screen appears correctly and no orphaned animation coroutines run.
+
+---
+
+## Recovery Strategies
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| AnimatedSprite2D layout breaks discovered post-implementation | HIGH | Rebuild dice display as TextureRect; re-wire AnimationPlayer tracks; re-test all 6 faces |
+| VRAM compression black texture on web | LOW | Change import setting, re-import, re-export — 15 minutes |
+| `animation_finished` never fires (looping animation) | LOW | Rename animation, uncheck loop flag — 5 minutes |
+| Race condition from missing `ANIMATING` state | MEDIUM | Add state enum value, add match arms in all button handlers, test all transition paths |
+| Layout reflow flash from `hide()`/`show()` | LOW | Replace with `modulate.a` toggling; test transition timing |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| AnimatedSprite2D in Control node (#1) | Phase 1 — architecture decision | Confirm `TextureRect` is the dice display node type in scene before any animation code |
+| SubViewport complexity (#2) | Phase 1 — architecture decision | SubViewport does not appear anywhere in the scene tree |
+| Looping animation never emits finished signal (#3) | Phase 1 — animation clip design | Two named clips exist: `"tumble"` (loop) and `"land"` (no loop); verified in AnimationPlayer |
+| `await` race condition on fast input (#4) | Phase 1 — state machine extension | `ANIMATING` state added to enum; cell buttons confirmed disabled in that state |
+| VRAM texture compression on web (#5) | Phase 1 — asset import setup | `.import` file for spritesheet confirms non-VRAM compression before first web test |
+| Layout reflow flash (#6) | Phase 2 — transition implementation | Transition tested on actual HTML5 export, no flash at 60fps and throttled CPU |
 
 ---
 
 ## Sources
 
-- Training knowledge of Godot 4.x (GDScript, Control nodes, HTML5 export), assessed through ~August 2025. Confidence: MEDIUM.
-- HTML5 SharedArrayBuffer requirement is a well-documented browser security policy (post-Spectre, 2021+). Confidence: HIGH for the browser policy itself; MEDIUM for exact Godot export template naming (verify in current Godot 4 export docs).
-- Line detection off-by-one is a recurring pattern in Godot board game community posts and general game dev forums. Confidence: HIGH (domain-general, not Godot-specific).
-- GridContainer behavior is based on Godot 4 Control node documentation patterns. Confidence: HIGH.
-- Flag: All HTML5-specific claims should be verified against https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html before the export phase.
+- Godot Forum: [Possible to use AnimatedSprite2D in Control Node?](https://forum.godotengine.org/t/possible-to-use-animatedsprite2d-in-control-node/96054) — MEDIUM confidence
+- Godot Forum: [What's the CORRECT way of having a sprite I can animate on the GUI layer?](https://forum.godotengine.org/t/whats-the-correct-way-of-having-a-sprite-i-can-animate-on-the-gui-layer/59868) — MEDIUM confidence
+- GitHub: [VRAM compressed textures not rendered in web — Issue #95721](https://github.com/godotengine/godot/issues/95721) — HIGH confidence (confirmed bug report)
+- Godot Forum: [Animation finished signal not triggering](https://forum.godotengine.org/t/animation-finished-signal-not-triggering/108320) — MEDIUM confidence
+- Godot Forum: [AnimationPlayer not finishing and not calling animation_finished](https://forum.godotengine.org/t/animationplayer-not-finishing-and-not-calling-animation-finished/75737) — MEDIUM confidence
+- GitHub: [Possible race condition with animated sprites — Issue #99076](https://github.com/godotengine/godot/issues/99076) — MEDIUM confidence
+- Godot Forum: [How to use Node2Ds in a Control?](https://forum.godotengine.org/t/how-to-use-node2ds-in-a-control/101437) — MEDIUM confidence
+- Godot 4 docs: [AnimatedSprite2D](https://docs.godotengine.org/en/stable/classes/class_animatedsprite2d.html) — HIGH confidence
+- Godot 4 docs: [Exporting for the Web](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html) — HIGH confidence
+- v1.0 project lesson: GDScript `:=` type inference breaks HTML5 export — HIGH confidence (validated in this project)
+
+---
+*Pitfalls research for: Steamroller v1.1 — dice sprite animation in Control-node Godot 4 game*
+*Researched: 2026-03-15*
