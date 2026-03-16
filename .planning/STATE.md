@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: MVP
-status: milestone_complete
-stopped_at: v1.0 milestone archived
-last_updated: "2026-03-16T00:20:12.088Z"
-last_activity: 2026-03-15 — v1.0 MVP milestone completed and archived
+milestone: v1.1
+milestone_name: Dice Polish
+status: defining_requirements
+stopped_at: null
+last_updated: "2026-03-15"
+last_activity: 2026-03-15 — Milestone v1.1 started
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,13 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** The core loop — roll, claim, score lines — must feel immediate and satisfying.
-**Current focus:** Planning next milestone
+**Current focus:** v1.1 Dice Polish
 
 ## Current Position
 
-Milestone: v1.0 MVP — SHIPPED 2026-03-15
-Status: Complete — all 4 phases, 10 plans shipped
-Archive: .planning/milestones/v1.0-ROADMAP.md, v1.0-REQUIREMENTS.md
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-15 — Milestone v1.1 started
 
 ## Accumulated Context
 
@@ -41,10 +42,10 @@ None.
 
 ### Blockers/Concerns
 
-None — all v1.0 blockers resolved.
+None.
 
 ## Session Continuity
 
 Last session: 2026-03-15
-Stopped at: v1.0 milestone archived
+Stopped at: Milestone v1.1 initialization
 Resume file: None

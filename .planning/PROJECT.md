@@ -33,7 +33,18 @@ The core loop — roll, claim, score lines — must feel immediate and satisfyin
 
 ### Active
 
-(None — planning next milestone)
+- [ ] Prominent centered roll button that is the clear call-to-action
+- [ ] Fake-3D tumbling dice sprite animation (pre-rendered frames landing on rolled value)
+- [ ] Roll button transforms into dice animation on press (single focal point)
+
+## Current Milestone: v1.1 Dice Polish
+
+**Goal:** Make the roll action feel great — prominent centered button that transforms into a tumbling dice animation.
+
+**Target features:**
+- Large, centered roll button as the unmissable call-to-action
+- Fake-3D tumbling dice sprite animation
+- Button-to-dice transformation flow
 
 ### Out of Scope
 
@@ -76,4 +87,4 @@ Deploy pipeline: butler (itch.io) + gh CLI (GitHub Releases) via deploy.sh.
 | butler + gh CLI deploy pipeline | One-command release to all platforms | ✓ Good — repeatable deploys |
 
 ---
-*Last updated: 2026-03-15 after v1.0 milestone*
+*Last updated: 2026-03-15 after v1.1 milestone started*
